@@ -9,12 +9,35 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/">Trang chủ</a>
                 </li>
-                {% for c in categories %}
+                <!--                {% for c in categories %}-->
+                <!--                <li class="nav-item">-->
+                <!--                    <a class="nav-link" href="/?category_id={{ c.id }}">{{ c.name }}</a>-->
+                <!--                </li>-->
+                <!--                {% endfor %}-->
                 <li class="nav-item">
-                    <a class="nav-link" href="/?category_id={{ c.id }}">{{ c.name }}</a>
+                    <div class="dropdown">
+                        <button type="button" class="btn btn-list btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                            Quản lý học sinh
+                        </button>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/tiepnhanhocsinh">Tiếp nhận học sinh</a></li>
+                            <li><a class="dropdown-item" href="#">Điều chỉnh lớp</a></li>
+                            <li><a class="dropdown-item" href="#">Tra cứu học sinh</a></li>
+                        </ul>
+                    </div>
                 </li>
-                {% endfor %}
-
+                <li class="nav-item">
+                    <a class="nav-link" href="/quanlymonhoc">Quản lý môn học</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/quanlydiem">Quản lý điểm</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/quydinh">Xem quy định</a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link" href="/tongket">Tổng kết</a>
+                </li>
                 <li class="nav-item">
                     <a class="nav-link text-danger" href="/login">Đăng nhập</a>
                 </li>

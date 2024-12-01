@@ -6,3 +6,9 @@ body {
 .alert {
     text-align:center;
 }
+
+.btn-list {
+    color: rgba(255,255,255,.55);
+    background-color: #212529!important;
+    border-color: #212529!important;
+}

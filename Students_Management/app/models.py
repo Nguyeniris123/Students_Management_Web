@@ -18,9 +18,9 @@ class User(db.Model):
     user_role = Column(Enum(UserRole), default=UserRole.USER)
 
 
-class Category(db.Model):
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(50), nullable=False, unique=True)
+# class Category(db.Model):
+#     id = Column(Integer, primary_key=True, autoincrement=True)
+#     name = Column(String(50), nullable=False, unique=True)
 
 
 if __name__ == '__main__':
@@ -33,11 +33,11 @@ if __name__ == '__main__':
         db.session.add(u)
         db.session.commit()
 
-        c1 = Category(name='Điểm')
-        c2 = Category(name='Môn học')
-        c3 = Category(name='Lớp')
-        db.session.add_all([c1, c2, c3])
-        db.session.commit()
+        # c1 = Category(name='Điểm')
+        # c2 = Category(name='Môn học')
+        # c3 = Category(name='Lớp')
+        # db.session.add_all([c1, c2, c3])
+        # db.session.commit()
 
 
 
