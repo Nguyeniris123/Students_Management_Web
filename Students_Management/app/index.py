@@ -26,6 +26,14 @@ def register_process():
 def tiepnhanhocsinh_process():
     return render_template('tiepnhanhocsinh.html')
 
+@app.route("/dieuchinhlop")
+def dieuchinhlop_process():
+    return render_template('dieuchinhlop.html')
+
+@app.route("/tracuuhocsinh")
+def tracuuhocsinh_process():
+    return render_template('tracuuhocsinh.html')
+
 @app.route("/quanlymonhoc")
 def qlmonhoc_process():
     return render_template('quanlymonhoc.html')

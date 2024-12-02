@@ -7,6 +7,9 @@ from enum import Enum as RoleEnum
 class UserRole(RoleEnum):
     ADMIN = 1
     USER = 2
+    GIAOVIEN = 3
+    NHANVIEN = 4
+
 
 class User(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
