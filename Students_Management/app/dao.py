@@ -1,5 +1,11 @@
-# from app.models import Category
+from app.models import User
 from app import app
+import hashlib
 
-# def load_categories():
-#     return Category.query.order_by('id').all()
+def auth_user(username, password):
+    password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
+    return User.query.filter(User.username.__eq__(username),
+                             User.password.__eq__(password)).first()
+
+def get_user_by_id(id):
+    return User.query.get(id)

@@ -9,14 +9,10 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/">Trang chủ</a>
                 </li>
-                <!--                {% for c in categories %}-->
-                <!--                <li class="nav-item">-->
-                <!--                    <a class="nav-link" href="/?category_id={{ c.id }}">{{ c.name }}</a>-->
-                <!--                </li>-->
-                <!--                {% endfor %}-->
                 <li class="nav-item">
                     <div class="dropdown">
-                        <button type="button" class="btn btn-list btn-primary dropdown-toggle" data-bs-toggle="dropdown">
+                        <button type="button" class="btn btn-list btn-primary dropdown-toggle"
+                                data-bs-toggle="dropdown">
                             Quản lý học sinh
                         </button>
                         <ul class="dropdown-menu">
@@ -38,17 +34,29 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/tongket">Tổng kết</a>
                 </li>
+                {% if current_user.is_authenticated %}
+                <li class="nav-item">
+                    <a class="nav-link text-danger" href="/login">
+                        <img src="{{ current_user.avatar }}" width="25" class="rounded-circle"/>
+                        Chào {{ current_user.name }}.
+                    </a>
+                </li>
+                <li class="nav-item">
+                    <a class="nav-link text-success" href="/logout">Đăng xuất</a>
+                </li>
+                {% else %}
                 <li class="nav-item">
                     <a class="nav-link text-danger" href="/login">Đăng nhập</a>
                 </li>
                 <li class="nav-item">
                     <a class="nav-link text-success" href="/register">Đăng kí</a>
                 </li>
+                {% endif %}
             </ul>
-<!--            <form method="get" action="/" class="d-flex">-->
-<!--                <input class="form-control me-2" type="text" name="kw" placeholder="Tìm kiếm thông tin">-->
-<!--                <button class="btn btn-primary" type="submit">Tìm</button>-->
-<!--            </form>-->
+            <!--            <form method="get" action="/" class="d-flex">-->
+            <!--                <input class="form-control me-2" type="text" name="kw" placeholder="Tìm kiếm thông tin">-->
+            <!--                <button class="btn btn-primary" type="submit">Tìm</button>-->
+            <!--            </form>-->
         </div>
     </div>
 </nav>
