@@ -19,7 +19,7 @@ class User(db.Model, UserMixin):
     username = Column(String(50), nullable=False, unique=True)
     password = Column(String(50), nullable=False)
     avatar = Column(String(100),
-                    default='https://cellphones.com.vn/sforum/wp-content/uploads/2023/10/avatar-trang-4.jpg')
+                    default='https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg')
     user_role = Column(Enum(UserRole), default=UserRole.USER)
 
 if __name__ == '__main__':

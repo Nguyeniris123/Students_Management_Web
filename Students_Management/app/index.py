@@ -65,4 +65,5 @@ def tongket_process():
     return render_template('tongket.html')
 
 if __name__ == '__main__':
-    app.run(debug=True)
+    app.run(debug=True, port=5001)  # Thay port mặc định (5000) thành 5001
+
