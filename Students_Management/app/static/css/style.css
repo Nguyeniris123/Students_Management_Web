@@ -12,3 +12,13 @@ body {
     background-color: #212529!important;
     border-color: #212529!important;
 }
+
+.Name-school {
+    background-color: #F0F0F0;
+}
+
+.carousel-item img {
+    height: 600px; /* Chiều cao cố định */
+    object-fit: cover; /* Ảnh cắt để phù hợp vùng hiển thị mà không thay đổi tỷ lệ */
+    width: 100%; /* Đảm bảo ảnh bao phủ toàn chiều rộng */
+}

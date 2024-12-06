@@ -1,19 +1,51 @@
 {% extends 'layout/base.html' %}
 {% block content %}
-{% if pages > 1 %}
-<ul class="pagination mt-1">
-    {% for i in range (1, pages +1) %}
-    <li class="page-item">
-        <a class="page-link" href="/?page={{ i }}">{{ i }}</a>
-    </li>
-    {% endfor %}
-</ul>
-{% endif %}
+<h1 class="Name-school text-center mt-1">TRƯỜNG THPT PHAN CHU TRINH</h1>
+<!-- Carousel - Slide show -->
+<div id="demo" class="carousel slide" data-bs-ride="carousel">
 
-{% if products %}
+    <!-- Indicators/dots -->
+    <div class="carousel-indicators">
+        <button type="button" data-bs-target="#demo" data-bs-slide-to="0" class="active"></button>
+        <button type="button" data-bs-target="#demo" data-bs-slide-to="1"></button>
+        <button type="button" data-bs-target="#demo" data-bs-slide-to="2"></button>
+    </div>
 
-{% else %}
-<div class="alert alert-info"> Không có thông tin!!!</div>
-{% endif %}
+    <!-- The slideshow/carousel -->
+    <div class="carousel-inner">
+        <div class="carousel-item active">
+            <img src="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733502443/danh-gia-truong-thpt-phan-chau-trinh-tinh-da-nang-co-tot-khong_z8qju2.jpg"
+                 alt="Cổng trường" class="d-block w-100">
+            <div class="carousel-caption">
+                <h3>Cổng trường</h3>
+                <p>Cổng vào trường THPT Phan Chu Trinh</p>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733502442/danh-gia-truong-thpt-phan-chu-trinh-binh-thuan-co-tot-khong__4__t1ogea.jpg" alt="Khuôn viên"
+                 class="d-block w-100">
+            <div class="carousel-caption">
+                <h3>Khuôn viên trường</h3>
+                <p>Học sinh đang chuẩn bị làm lễ chào cờ</p>
+            </div>
+        </div>
+        <div class="carousel-item">
+            <img src="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733502443/content_danh-gia-truong-thpt-phan-chau-trinh-tinh-da-nang-co-tot-khong3_lyeawv.jpg"
+                 alt="Khuôn viên" class="d-block w-100">
+            <div class="carousel-caption">
+                <h3>Khuôn viên trường</h3>
+                <p>Cơ sở trường học</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Left and right controls/icons -->
+    <button class="carousel-control-prev" type="button" data-bs-target="#demo" data-bs-slide="prev">
+        <span class="carousel-control-prev-icon"></span>
+    </button>
+    <button class="carousel-control-next" type="button" data-bs-target="#demo" data-bs-slide="next">
+        <span class="carousel-control-next-icon"></span>
+    </button>
+</div>
 
 {% endblock %}
