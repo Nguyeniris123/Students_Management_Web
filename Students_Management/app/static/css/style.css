@@ -12,3 +12,45 @@ body {
     background-color: #212529!important;
     border-color: #212529!important;
 }
+
+.flex{
+    display: flex;
+    justify-content: space-between;
+}
+
+.scroll-container {
+    height: 400px;       /* Chiều cao cố định */
+    overflow-y: scroll;
+    overflow-x: unset;  /* Cuộn theo chiều dọc */
+}
+
+.custom_width{
+    width: 50%;
+}
+
+@media (max-width: 1400px) {
+    .flex{
+        display: block;
+    }
+    .custom_width{
+        width: 100%;
+    }
+}
+
+.alert_size{
+    position: absolute;
+    right: 0;
+    z-index: 999;
+    width:25%;
+    top: 10;
+}
+
+a{
+    color: inherit; /* Tắt màu chữ */
+    text-decoration: none; /* Tắt gạch chân */
+}
+
+.btn_add:hover, .btn_add:focus, .btn_add:active {
+    color: inherit; /* Giữ nguyên màu khi hover, focus hoặc active */
+    text-decoration: none; /* Tắt gạch chân khi hover, focus hoặc active */
+}
