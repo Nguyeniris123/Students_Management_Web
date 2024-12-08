@@ -1,4 +1,50 @@
 {% extends 'layout/base.html' %}
 {% block content %}
+<h1 class="text-center mt-1">BẢNG ĐIỂM MÔN HỌC</h1>
+<div class="row">
+    <div class="col-12 col-md-4 p-2">
+        <p class="mb-0">Năm học</p>
+        <input type="text" class="form-control">
+    </div>
+    <div class="col-12 col-md-4 p-2">
+        <p class="mb-0">Lớp</p>
+        <input type="text" class="form-control">
+    </div>
+    <div class="col-12 col-md-4 p-2">
+        <p class="mb-0">Tìm kiếm học sinh</p>
+        <form method="get" action="/" class="d-flex">
+            <input class="form-control me-2" type="text" name="kw" placeholder="Nhập tên hoặc mã số">
+            <button class="btn btn-primary" type="submit">Tìm</button>
+        </form>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12 col-md-4 p-2">
+        <p class="mb-0">Học kì</p>
+        <input type="text" class="form-control">
+    </div>
+    <div class="col-12 col-md-4 p-2">
+        <p class="mb-0">Môn học</p>
+        <input type="text" class="form-control">
+    </div>
+    <div class="col-12 col-md-4 p-2">
+        <form method="get" action="/" class="d-flex justify-content-between mt-4">
+            <button class="btn btn-danger" type="button">Delete</button>
+            <button class="btn btn-primary" type="button">Edit</button>
+            <button class="btn btn-primary" type="submit">Save</button>
+        </form>
+    </div>
+</div>
+<hr>
+
+<div class="row">
+    <div class="col-12 col-md-2 p-2 text-center">Cột 1</div>
+    <div class="col-12 col-md-2 p-2 text-center">Cột 2</div>
+    <div class="col-12 col-md-2 p-2 text-center">Cột 3</div>
+    <div class="col-12 col-md-2 p-2 text-center">Cột 4</div>
+    <div class="col-12 col-md-2 p-2 text-center">Cột 5</div>
+    <div class="col-12 col-md-2 p-2 text-center">Cột 5</div>
+</div>
 
 {% endblock %}
