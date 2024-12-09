@@ -23,6 +23,18 @@ class NhanVienView(ModelView):
         # Chỉ nhân viên mới có quyền truy cập
         return current_user.is_authenticated and current_user.user_role == UserRole.NHANVIEN
 
+class NhanVienAdminView(ModelView):
+    def is_accessible(self):
+        # Cho phép truy cập nếu user là nhân viên hoặc admin
+        return current_user.is_authenticated and (
+            current_user.user_role == UserRole.ADMIN or current_user.user_role == UserRole.NHANVIEN)
+
+class GiaoVienAdminView(ModelView):
+    def is_accessible(self):
+        # Cho phép truy cập nếu user là nhân viên hoặc admin
+        return current_user.is_authenticated and (
+            current_user.user_role == UserRole.ADMIN or current_user.user_role == UserRole.GIAOVIEN)
+
 
 
 class SemesterView(AdminView):
@@ -33,16 +45,16 @@ class SemesterView(AdminView):
     }
     column_filters = ['year', 'semester_number']
 
-class ClassView(NhanVienView):
+class ClassView(NhanVienAdminView):
     column_list = ('year', 'semester_number')
 
-class StudentView(NhanVienView):
+class StudentView(NhanVienAdminView):
     column_list = ('year', 'semester_number')
 
 class SubjectView(AdminView):
     column_list = ('year', 'semester_number')
 
-class GradeView(GiaoVienView):
+class GradeView(GiaoVienAdminView):
     column_list = (
     'student.name', 'subject.name', 'semester.year', 'semester.semester_number', 'grade_type', 'grade_value', 'attempt')
     column_labels = {
