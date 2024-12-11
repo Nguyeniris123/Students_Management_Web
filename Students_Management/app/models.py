@@ -1,11 +1,12 @@
 from email.policy import default
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Enum, false
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Enum
+from sqlalchemy.event import listens_for
 from sqlalchemy.orm import relationship
 from app import db, app
 from enum import Enum as RoleEnum
 from flask_login import UserMixin
-from datetime import date
-
+from datetime import date, datetime
+import hashlib
 
 class UserRole(RoleEnum):
     ADMIN = 1
@@ -13,15 +14,17 @@ class UserRole(RoleEnum):
     GIAOVIEN = 3
     NHANVIEN = 4
 
+
 class Gender(RoleEnum):
     MALE = 1
     FEMALE = 2
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(50), nullable=False)
     username = db.Column(db.String(50), nullable=False, unique=True)
-    password = db.Column(db.String(50), nullable=False)
+    password = db.Column(db.String(50), nullable=False, default=str(hashlib.md5('1'.encode('utf-8')).hexdigest()))
     user_role = db.Column(db.Enum(UserRole), default=UserRole.USER)
     sex = db.Column(db.Enum(Gender), default=Gender.MALE)  # Giới tính (Enum)
     birth = db.Column(db.Date, nullable=True, default=date(2004, 7, 4))
@@ -30,6 +33,7 @@ class User(db.Model, UserMixin):
     email = db.Column(db.String(100), nullable=False, default='user@example.com')
     avatar = db.Column(db.String(100),
                        default='https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg')
+
     # Định nghĩa cho cơ chế kế thừa
     # type = db.Column(db.String(50), nullable=False)  # Trường phân biệt kiểu
     #
@@ -41,11 +45,22 @@ class User(db.Model, UserMixin):
 
 class Student(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Tham chiếu đến User
-    class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False)
+    class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False, default=1)
+
 
     # __mapper_args__ = {
     #     'polymorphic_identity': 'student',  # Định danh cho Student
     # }
+
+
+# Bảng lớp học
+class Class(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False)
+    grade = db.Column(db.Integer, nullable=False)  # Khối lớp (10, 11, 12)
+    max_students = db.Column(db.Integer, nullable=False, default=40)
+    students = relationship('Student', backref='class', lazy=True)
+
 
 # Lớp Teacher
 class Teacher(User):
@@ -56,6 +71,7 @@ class Teacher(User):
     #     'polymorphic_identity': 'teacher',
     # }
 
+
 # Lớp Staff
 class Staff(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Khóa chính tham chiếu từ User
@@ -65,13 +81,6 @@ class Staff(User):
     #     'polymorphic_identity': 'staff',
     # }
 
-# Bảng lớp học
-class Class(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(100), nullable=False)
-    grade = db.Column(db.Integer, nullable=False)  # Khối lớp (10, 11, 12)
-    max_students = db.Column(db.Integer, nullable=False, default=40)
-    students = relationship('Student', backref='class', lazy=True)
 
 # Bảng năm học và học kỳ
 class Semester(db.Model):
@@ -83,10 +92,12 @@ class Semester(db.Model):
         db.UniqueConstraint('year', 'semester_number', name='unique_year_semester'),
     )
 
+
 # Bảng môn học
 class Subject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
+
 
 # Bảng điểm
 class Score(db.Model):
@@ -102,40 +113,16 @@ class Score(db.Model):
     # subject = db.relationship('Subject', backref='score')
     semester = db.relationship('Semester', backref='score')
 
+
 if __name__ == '__main__':
     with app.app_context():
         db.create_all()
-
-        import hashlib
-
-        class1 = Class(name='10A1', grade=10, max_students=40)
-        db.session.add(class1)
 
         u1 = User(name='admin',
                   username='admin',
                   password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
                   user_role=UserRole.ADMIN)
         db.session.add(u1)
-
-        # Giả sử bạn đã có một đối tượng `class_` trong cơ sở dữ liệu, ta sẽ tạo một học sinh thuộc lớp đó.
-        class_instance = Class.query.first()  # Lấy lớp đầu tiên từ bảng `class`
-
-        # Tạo một đối tượng Student
-        student1 = Student(
-            name="Nguyen Thi Lan",
-            username="studentA",
-            password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
-            user_role=UserRole.ADMIN,
-            sex=Gender.FEMALE,
-            birth=date(1998, 6, 20),
-            address="12 Nguyen Trai, HCMC",
-            phone="0908123456",
-            email="lan@example.com",
-            avatar="https://example.com/avatar.jpg",
-            class_id=class_instance.id,  # Tham chiếu đến lớp
-            # type="student"
-        )
-        db.session.add(student1)
 
         teacher1 = Teacher(
             name="Nguyen Thi B",
@@ -150,6 +137,27 @@ if __name__ == '__main__':
             avatar="https://example.com/avatar.jpg",
             # type="teacher"
         )
-
         db.session.add(teacher1)
+
+        class1 = Class(name='10A1', grade=10, max_students=40)
+        db.session.add(class1)
+        # Giả sử bạn đã có một đối tượng `class_` trong cơ sở dữ liệu, ta sẽ tạo một học sinh thuộc lớp đó.
+        class_instance = Class.query.first()  # Lấy lớp đầu tiên từ bảng `class`
+
+        # Tạo một đối tượng Student
+        student1 = Student(
+            name="Nguyen Thi Lan",
+            username="studentA",
+            password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
+            user_role=UserRole.ADMIN,
+            sex=Gender.FEMALE,
+            birth=date(2005, 6, 20),
+            address="12 Nguyen Trai, HCMC",
+            phone="0908123456",
+            email="lan@example.com",
+            avatar="https://example.com/avatar.jpg",
+            class_id=class_instance.id,  # Tham chiếu đến lớp
+            # type="student"
+        )
+        db.session.add(student1)
         db.session.commit()
