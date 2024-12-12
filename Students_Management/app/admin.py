@@ -56,7 +56,7 @@ class StudentView(NhanVienAdminView):
         'class.name': 'Class'
     }
     form_columns = ['name', 'username', 'sex', 'birth', 'address', 'phone', 'email']
-    column_searchable_list = ['id', 'name', 'phone', 'email']
+    column_searchable_list = ['id', 'name']
     column_editable_list = ['name', 'sex', 'birth', 'address', 'phone', 'email']
 
     def on_model_change(self, form, model, is_created):
@@ -71,6 +71,17 @@ class StudentView(NhanVienAdminView):
 
         # Tiếp tục với các thay đổi khác
         super(StudentView, self).on_model_change(form, model, is_created)
+
+    # def on_model_change(self, form, model, is_created):
+    #     # Tạo username nếu không có
+    #     if not model.username:  # Nếu username chưa được gán
+    #         name_parts = model.name.split()  # Tách tên thành các từ
+    #         last_name = name_parts[-1] if name_parts else ''  # Lấy từ cuối cùng của tên
+    #         model.username = last_name.lower() + str(model.id)
+    #     existing_user = Student.query.filter_by(username=model.username).first()
+    #     if existing_user:
+    #         model.username = last_name.lower() + str(model.id)
+    #     return super().on_model_change(form, model, is_created)
 
 
 class SemesterView(AdminView):
