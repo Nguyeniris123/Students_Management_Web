@@ -1,7 +1,6 @@
 from email.policy import default
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Enum
-from sqlalchemy.event import listens_for
-from sqlalchemy.orm import relationship
+from sqlalchemy.orm import relationship, validates
 from app import db, app
 from enum import Enum as RoleEnum
 from flask_login import UserMixin
@@ -34,24 +33,12 @@ class User(db.Model, UserMixin):
     avatar = db.Column(db.String(100),
                        default='https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg')
 
-    # Định nghĩa cho cơ chế kế thừa
-    # type = db.Column(db.String(50), nullable=False)  # Trường phân biệt kiểu
-    #
-    # __mapper_args__ = {
-    #     'polymorphic_identity': 'user',  # Định danh cho User
-    #     'polymorphic_on': type           # Dựa vào trường `type` để phân biệt
-    # }
-
+class Admin(User):
+    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Tham chiếu đến User
 
 class Student(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Tham chiếu đến User
     class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False, default=1)
-
-
-    # __mapper_args__ = {
-    #     'polymorphic_identity': 'student',  # Định danh cho Student
-    # }
-
 
 # Bảng lớp học
 class Class(db.Model):
@@ -67,19 +54,12 @@ class Teacher(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Khóa chính tham chiếu từ User
     department = db.Column(db.String(100), nullable=True)  # Khoa/Bộ môn của giáo viên
 
-    # __mapper_args__ = {
-    #     'polymorphic_identity': 'teacher',
-    # }
-
 
 # Lớp Staff
 class Staff(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Khóa chính tham chiếu từ User
     position = db.Column(db.String(100), nullable=True)  # Vị trí làm việc
 
-    # __mapper_args__ = {
-    #     'polymorphic_identity': 'staff',
-    # }
 
 
 # Bảng năm học và học kỳ
@@ -118,11 +98,11 @@ if __name__ == '__main__':
     with app.app_context():
         db.create_all()
 
-        u1 = User(name='admin',
+        admin1 = Admin(name='admin',
                   username='admin',
                   password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
                   user_role=UserRole.ADMIN)
-        db.session.add(u1)
+        db.session.add(admin1)
 
         teacher1 = Teacher(
             name="Nguyen Thi B",
@@ -135,13 +115,12 @@ if __name__ == '__main__':
             phone="0908123456",
             email="lan@example.com",
             avatar="https://example.com/avatar.jpg",
-            # type="teacher"
         )
         db.session.add(teacher1)
 
         class1 = Class(name='10A1', grade=10, max_students=40)
         db.session.add(class1)
-        # Giả sử bạn đã có một đối tượng `class_` trong cơ sở dữ liệu, ta sẽ tạo một học sinh thuộc lớp đó.
+        # đã có một đối tượng `class_` trong cơ sở dữ liệu, ta sẽ tạo một học sinh thuộc lớp đó.
         class_instance = Class.query.first()  # Lấy lớp đầu tiên từ bảng `class`
 
         # Tạo một đối tượng Student
@@ -149,7 +128,7 @@ if __name__ == '__main__':
             name="Nguyen Thi Lan",
             username="studentA",
             password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
-            user_role=UserRole.ADMIN,
+            user_role=UserRole.USER,
             sex=Gender.FEMALE,
             birth=date(2005, 6, 20),
             address="12 Nguyen Trai, HCMC",
@@ -157,7 +136,6 @@ if __name__ == '__main__':
             email="lan@example.com",
             avatar="https://example.com/avatar.jpg",
             class_id=class_instance.id,  # Tham chiếu đến lớp
-            # type="student"
         )
         db.session.add(student1)
         db.session.commit()
