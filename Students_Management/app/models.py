@@ -28,6 +28,11 @@ class HocKy(RoleEnum):
     HK1 = 1
     HK2 = 2
 
+class KhoiLop(RoleEnum):
+    Khoi10 = 1
+    Khoi11 = 2
+    Khoi12 = 3
+
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -57,22 +62,6 @@ class Student(User):
 #     password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
 #     return Student(name=name,username=username,password=password)
 
-# Bảng lớp học
-class Class(db.Model):
-    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(100), nullable=False)
-    max_students = db.Column(db.Integer, nullable=False, default=40)
-    class_grade_id = db.Column(db.Integer, db.ForeignKey('class_grade.id'), nullable=False)
-    students = relationship('Student', backref='class', lazy=True)
-
-
-# Bang khoi lop
-class ClassGrade(db.Model):
-    id = Column(Integer, primary_key=True, autoincrement=True)
-    name = Column(String(50), nullable=False)
-    classes = relationship('Class', backref='class_grade', lazy=True)
-
-
 # Lớp Teacher
 class Teacher(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Khóa chính tham chiếu từ User
@@ -83,6 +72,22 @@ class Teacher(User):
 class Staff(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Khóa chính tham chiếu từ User
     position = db.Column(db.String(100), nullable=True)  # Vị trí làm việc
+
+# Bảng lớp học
+class Class(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False)
+    max_students = db.Column(db.Integer, nullable=False, default=40)
+    students = relationship('Student', backref='class', lazy=True)
+    class_grade_id = db.Column(db.Integer, db.ForeignKey('class_grade.id'), nullable=False)
+    class_grade = db.relationship('ClassGrade', backref=db.backref('classes', lazy=True))  # Quan hệ ngược
+
+
+# Bang khoi lop
+class ClassGrade(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.Enum(KhoiLop), default=KhoiLop.Khoi10)
+    # classes = relationship('Class', backref='class_grade', lazy=True)
 
 
 
@@ -172,14 +177,17 @@ if __name__ == '__main__':
         )
         db.session.add(teacher1)
 
-        classgrade1= ClassGrade(name="10")
+        classgrade1= ClassGrade(name=KhoiLop.Khoi10)
+        classgrade2 = ClassGrade(name=KhoiLop.Khoi11)
+        classgrade3 = ClassGrade(name=KhoiLop.Khoi12)
+        db.session.add(classgrade1)
+        db.session.add(classgrade2)
+        db.session.add(classgrade3)
 
         class1 = Class(name='10A1', max_students=40, class_grade=classgrade1)
         db.session.add(class1)
-        # đã có một đối tượng `class_` trong cơ sở dữ liệu, ta sẽ tạo một học sinh thuộc lớp đó.
-        class_instance = Class.query.first()  # Lấy lớp đầu tiên từ bảng `class`
 
-        hocky1= Semester()
+        class_instance = Class.query.first()  # Lấy lớp đầu tiên từ bảng `class`
 
         # Tạo một đối tượng Student
         student1 = Student(
@@ -197,22 +205,23 @@ if __name__ == '__main__':
         )
         db.session.add(student1)
 
+        hocky1 = Semester() # mặc định là học kì 1
+        hocky2 = Semester(semester_number=HocKy.HK2)
+        db.session.add(hocky2)
+
+
         # Tao mon hoc cua 1 khoi lop va cac cot diem trong mon hoc do
-        so_cot_15p = 3  # Trong 1 ky hoc
+        so_cot_15p = 3
         so_cot_1tiet = 2
-        so_cot_gk = 1
         so_cot_ck = 1
-
-        toan10 = Subject(name="Toan10", semester=hocky1)
-        van10 = Subject(name='Van10', semester=hocky1)
-        anh10 = Subject(name='Anh10', semester=hocky1)
-
-        grade10 = ClassGrade(name="Khoi 10", subjects=[toan10, van10, anh10])
 
         diem_15p = ScoreType(name='Diem 15 phut', he_so=1)
         diem_1tiet = ScoreType(name='Diem 1 tiet', he_so=2)
-        diem_thi_gk = ScoreType(name='Diem thi gk', he_so=3)
-        diem_thi_cuoi_ki = ScoreType(name='Diem thi gk', he_so=4)
+        diem_thi_cuoi_ki = ScoreType(name='Diem thi gk', he_so=3)
+
+        toan10 = Subject(name="Toan10", semester=hocky1, class_grade=classgrade1)
+        van10 = Subject(name='Van10', semester=hocky1, class_grade=classgrade1)
+        anh10 = Subject(name='Anh10', semester=hocky1, class_grade=classgrade1)
 
         so_cot_diem15p_mon_toan = SubjectScoreType(subject=toan10, score_type=diem_15p, so_cot_diem=so_cot_15p)
         so_cot_diem1tiet_mon_toan = SubjectScoreType(subject=toan10, score_type=diem_1tiet, so_cot_diem=so_cot_1tiet)

@@ -1,5 +1,5 @@
 from datetime import date
-from app.models import Class, Student, User, UserRole, Semester, Subject, Score
+from app.models import Class, Student, User, UserRole, Semester, Subject, Score, ScoreType, ClassGrade
 from flask_admin import Admin, BaseView, expose
 from app import app, db
 from flask_admin.contrib.sqla import ModelView
@@ -94,27 +94,33 @@ class SemesterView(AdminView):
 
 
 class ClassView(NhanVienAdminView):
-    column_list = ['id', 'name', 'grade']
+    column_list = ['id', 'name', 'max_students', 'class_grade.name']
+    column_labels = {
+        'class_grade.name': 'Grade'
+    }
+    form_columns = ['name', 'max_students', 'class_grade']
+    column_searchable_list = ['id', 'name']
+    form_args = {
+        'class_grade': {
+            'query_factory': lambda: ClassGrade.query.all(),  # Lấy tất cả ClassGrade
+            'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
+        }
+    }
 
+class ClassGradeView(NhanVienAdminView):
+    column_list = ['id', 'name']
+    column_searchable_list = ['id', 'name']
 
 class SubjectView(AdminView):
-    column_list = ['year', 'semester_number']
-
+    column_list = ['id', 'name', 'description']
+    column_searchable_list = ['id', 'name']
 
 class ScoreView(GiaoVienAdminView):
-    column_list = ['student.name', 'subject.name', 'semester.year', 'semester.semester_number', 'grade_type',
-                   'grade_value',
-                   'attempt']
+    column_list = []
     column_labels = {
-        'student.name': 'Học sinh',
-        'subject.name': 'Môn học',
-        'semester.year': 'Năm học',
-        'semester.semester_number': 'Học kỳ',
-        'score_type': 'Loại điểm',
-        'score_value': 'Giá trị điểm',
-        'attempt': 'Lần kiểm tra'
+
     }
-    column_filters = ['score_type', 'semester.year', 'semester.semester_number']
+    column_filters = []
 
 
 class LogoutView(AuthenticatedView):
@@ -132,7 +138,8 @@ class StatsView(AuthenticatedAdminView):
 
 # Thêm các bảng vào Flask-Admin
 admin.add_view(StudentView(Student, db.session))  # Nhân viên có thể truy cập
-admin.add_view(ClassView(Class, db.session))  # Chỉ giáo viên có thể truy cập
+admin.add_view(ClassView(Class, db.session))  # Chỉ Nhân viên có thể truy cập
+admin.add_view(ClassGradeView(ClassGrade, db.session))  # Chỉ Nhân viên có thể truy cập
 admin.add_view(SemesterView(Semester, db.session))
 admin.add_view(SubjectView(Subject, db.session))
 admin.add_view(ScoreView(Score, db.session))  # Chỉ giáo viên có thể truy cập
