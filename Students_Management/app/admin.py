@@ -1,5 +1,5 @@
 from datetime import date
-from app.models import Class, Student, User, UserRole, Semester, Subject, Score, ScoreType, ClassGrade
+from app.models import Class, Student, User, UserRole, Semester, Subject, Score, ScoreType, ClassGrade, Year
 from flask_admin import Admin, BaseView, expose
 from app import app, db
 from flask_admin.contrib.sqla import ModelView
@@ -9,9 +9,11 @@ from flask import redirect
 # Khởi tạo Flask-Admin
 admin = Admin(app, name='Quản trị hệ thống', template_mode='bootstrap4')
 
+
 class AuthenticatedView(BaseView):
     def is_accessible(self):
         return current_user.is_authenticated
+
 
 class AuthenticatedAdminView(BaseView):
     def is_accessible(self):
@@ -83,22 +85,28 @@ class StudentView(NhanVienAdminView):
     #         model.username = last_name.lower() + str(model.id)
     #     return super().on_model_change(form, model, is_created)
 
+class YearView(AdminView):
+    column_list = ['id', 'name', 'semesters']
+    form_columns = ['name']
+    column_filters = ['id', 'name']
+    form_args = {
+        'semesters': {
+            'query_factory': lambda: Semester.query.all(),  # Lấy tất cả ClassGrade
+            'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
+        }
+    }
 
 class SemesterView(AdminView):
-    column_list = ['year', 'semester_number']
-    column_labels = {
-        'year': 'Năm học',
-        'semester_number': 'Học kỳ'
-    }
-    column_filters = ['year', 'semester_number']
+    column_list = ['id', 'name', 'year', 'subjects']
+    form_columns = ['name', 'year']
+    column_filters = ['id', 'name']
 
 
 class ClassView(NhanVienAdminView):
-    column_list = ['id', 'name', 'max_students', 'class_grade.name']
+    column_list = ['id', 'name', 'students', 'max_students', 'class_grade.name']
     column_labels = {
         'class_grade.name': 'Grade'
     }
-    form_columns = ['name', 'max_students', 'class_grade']
     column_searchable_list = ['id', 'name']
     form_args = {
         'class_grade': {
@@ -107,20 +115,38 @@ class ClassView(NhanVienAdminView):
         }
     }
 
+
 class ClassGradeView(NhanVienAdminView):
-    column_list = ['id', 'name']
+    column_list = ['id', 'name', 'subjects', 'classes']
     column_searchable_list = ['id', 'name']
 
+
 class SubjectView(AdminView):
-    column_list = ['id', 'name', 'description']
+    column_list = ['id', 'name', 'class_grade.name', 'semester.name', 'description']
+    column_labels = {
+        'class_grade.name': 'Grade',
+        'semester.name': 'Semester'
+    }
+    form_columns = ['name', 'class_grade', 'semester', 'description']
     column_searchable_list = ['id', 'name']
+    form_args = {
+        'class_grade': {
+            'query_factory': lambda: ClassGrade.query.all(),  # Lấy tất cả ClassGrade
+            'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
+        },
+        'semester': {
+            'query_factory': lambda: Semester.query.all(),
+            'get_label': lambda x: f"{x.year} - {x.name}"  # Hiển thị năm học + học kỳ
+        }
+    }
+
 
 class ScoreView(GiaoVienAdminView):
     column_list = []
     column_labels = {
 
     }
-    column_filters = []
+    column_filters = ['id']
 
 
 class LogoutView(AuthenticatedView):
@@ -140,6 +166,7 @@ class StatsView(AuthenticatedAdminView):
 admin.add_view(StudentView(Student, db.session))  # Nhân viên có thể truy cập
 admin.add_view(ClassView(Class, db.session))  # Chỉ Nhân viên có thể truy cập
 admin.add_view(ClassGradeView(ClassGrade, db.session))  # Chỉ Nhân viên có thể truy cập
+admin.add_view(YearView(Year, db.session))
 admin.add_view(SemesterView(Semester, db.session))
 admin.add_view(SubjectView(Subject, db.session))
 admin.add_view(ScoreView(Score, db.session))  # Chỉ giáo viên có thể truy cập

@@ -56,6 +56,9 @@ class Student(User):
     # num_instances = 0
     class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False, default=1)
 
+    def __str__(self):
+        return self.name
+
 # def create_student(name, password): #dua vao khoi_lop
 #     Student.num_instances += 1 # co the bi trung
 #     username = str(int(ma_hs_khoi10) + Student.num_instances)
@@ -80,27 +83,40 @@ class Class(db.Model):
     max_students = db.Column(db.Integer, nullable=False, default=40)
     students = relationship('Student', backref='class', lazy=True)
     class_grade_id = db.Column(db.Integer, db.ForeignKey('class_grade.id'), nullable=False)
-    class_grade = db.relationship('ClassGrade', backref=db.backref('classes', lazy=True))  # Quan hệ ngược
+    # class_grade = db.relationship('ClassGrade', backref=db.backref('classes', lazy=True))  # Quan hệ ngược
 
+    def __str__(self):
+        return self.name
 
 # Bang khoi lop
 class ClassGrade(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.Enum(KhoiLop), default=KhoiLop.Khoi10)
-    # classes = relationship('Class', backref='class_grade', lazy=True)
+    classes = relationship('Class', backref='class_grade', lazy=True)
+    subjects = relationship('Subject', backref='class_grade', lazy=True)
 
+    def __str__(self):
+        return self.name
 
+# Bảng năm
+class Year(db.Model):
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(9), nullable=False, default='2023-2024') # Ví dụ: "2023-2024"
+    semesters = relationship('Semester', backref='year', lazy=True)
+    scores = relationship('Score', backref='year', lazy=True)
 
-# Bảng năm học và học kỳ
+    def __str__(self):
+        return self.name
+
+# Bảng học kỳ
 class Semester(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    year = db.Column(db.String(9), nullable=False, default='2024')  # Ví dụ: "2023-2024"
-    semester_number = db.Column(db.Enum(HocKy), default=HocKy.HK1)  # Học kỳ 1 hoặc 2
-
+    name = db.Column(db.Enum(HocKy), default=HocKy.HK1)  # Học kỳ 1 hoặc 2, hoặc cả 2
+    year_id = Column(db.Integer, db.ForeignKey('year.id'), nullable=False)
+    subjects = relationship('Subject', backref='semester')
     __table_args__ = (
-        db.UniqueConstraint('year', 'semester_number', name='unique_year_semester'),
+        db.UniqueConstraint('year_id', 'name', name='unique_year_semester'),
     )
-
 
 # Bảng môn học
 class Subject(db.Model):
@@ -109,10 +125,14 @@ class Subject(db.Model):
     description = db.Column(db.String(200))
     class_grade_id = Column(db.Integer, db.ForeignKey('class_grade.id'), nullable=False)
     semester_id = Column(db.Integer, db.ForeignKey('semester.id'), nullable=False)
-    class_grade = relationship('ClassGrade', backref='subjects')
-    semester = relationship('Semester', backref='subjects')
+    # class_grade = relationship('ClassGrade', backref='subjects')
     score_types_association = relationship('SubjectScoreType', backref='subject')
     score_types = association_proxy('score_types_association','score_type')
+    __table_args__ = (
+        db.UniqueConstraint('semester_id', 'name', name='unique_subject_semester'),
+    )
+    def __str__(self):
+        return self.name
 
 # Bảng loại điểm
 class ScoreType(db.Model):
@@ -122,6 +142,9 @@ class ScoreType(db.Model):
     subjects_association = relationship('SubjectScoreType',backref='score_type')
     subjects = association_proxy('subjects_association', 'subject')
 
+
+
+
 # Bảng trung gian giữa điểm và loại điểm
 class SubjectScoreType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -130,21 +153,24 @@ class SubjectScoreType(db.Model):
     so_cot_diem = db.Column(db.Integer,default=1)
 
 
+
+
 # Bảng điểm
 class Score(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     so_diem = db.Column(db.Float, nullable=False)
     attempt = db.Column(db.Integer, default=1, nullable=False)
-    year = db.Column(db.String(9), nullable=False)  # "2023-2024"
+    year_id = Column(db.Integer, db.ForeignKey('year.id'), nullable=False)
     student_id = db.Column(db.Integer, ForeignKey('student.id'), nullable=False)
     subject_score_type_id = db.Column(db.Integer, ForeignKey('subject_score_type.id'), nullable=False)
     # relationship voi bang Student va bang MonHoc-LoaiDiem
     student = relationship('Student', backref='score')
     subject_score_type = relationship('SubjectScoreType', backref='score')
     __table_args__ = (
-        db.UniqueConstraint('student_id', 'subject_score_type_id', 'attempt', 'year',
+        db.UniqueConstraint('student_id', 'subject_score_type_id', 'attempt', 'year_id',
                             name='unique_point_of_a_subject_in_a_semester'),
     )
+
 
 # class Regulations(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
@@ -205,8 +231,11 @@ if __name__ == '__main__':
         )
         db.session.add(student1)
 
-        hocky1 = Semester() # mặc định là học kì 1
-        hocky2 = Semester(semester_number=HocKy.HK2)
+        nam1 = Year()
+        db.session.add(nam1)
+
+        hocky1 = Semester(year=nam1) # mặc định là học kì 1
+        hocky2 = Semester(name=HocKy.HK2, year=nam1)
         db.session.add(hocky2)
 
 
@@ -227,9 +256,9 @@ if __name__ == '__main__':
         so_cot_diem1tiet_mon_toan = SubjectScoreType(subject=toan10, score_type=diem_1tiet, so_cot_diem=so_cot_1tiet)
 
         diem_toan_15p_hs1_hk1 = Score(student=student1, subject_score_type=so_cot_diem15p_mon_toan, so_diem=10,
-                                     year="2023-2024")
+                                     year=nam1)
         diem_toan_1tiet_hs1_hk1 = Score(student=student1, subject_score_type=so_cot_diem1tiet_mon_toan, so_diem=5,
-                                       year="2023-2024")
+                                       year=nam1)
         db.session.add(diem_toan_15p_hs1_hk1)
         db.session.add(diem_toan_1tiet_hs1_hk1)
         db.session.commit()
