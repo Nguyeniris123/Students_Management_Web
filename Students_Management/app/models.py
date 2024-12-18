@@ -3,15 +3,15 @@ from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Enum
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, validates
 from app import db, app
-from enum import Enum as RoleEnum
+from enum import Enum as RoleEnum, unique
 from flask_login import UserMixin
 from datetime import date, datetime
 import hashlib
 
-
 ma_hs_khoi10 = str(datetime.now().year)[-2:] + "10000"
 ma_hs_khoi11 = str(datetime.now().year)[-2:] + "11000"
 ma_hs_khoi12 = str(datetime.now().year)[-2:] + "12000"
+
 
 class UserRole(RoleEnum):
     ADMIN = 1
@@ -24,9 +24,11 @@ class Gender(RoleEnum):
     MALE = 1
     FEMALE = 2
 
+
 class HocKy(RoleEnum):
     HK1 = 1
     HK2 = 2
+
 
 class KhoiLop(RoleEnum):
     Khoi10 = 1
@@ -48,8 +50,10 @@ class User(db.Model, UserMixin):
     avatar = db.Column(db.String(100),
                        default='https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg')
 
+
 class Admin(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Tham chiếu đến User
+
 
 class Student(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Tham chiếu đến User
@@ -58,6 +62,7 @@ class Student(User):
 
     def __str__(self):
         return self.name
+
 
 # def create_student(name, password): #dua vao khoi_lop
 #     Student.num_instances += 1 # co the bi trung
@@ -74,39 +79,44 @@ class Teacher(User):
 # Lớp Staff
 class Staff(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Khóa chính tham chiếu từ User
-    position = db.Column(db.String(100), nullable=True)  # Vị trí làm việc
+    position = db.Column(db.String(100), nullable=True, default='Nhân viên hành chính')  # Vị trí làm việc
+
 
 # Bảng lớp học
 class Class(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(100), nullable=False)
+    name = db.Column(db.String(100), unique=True, nullable=False)
     max_students = db.Column(db.Integer, nullable=False, default=40)
     students = relationship('Student', backref='class', lazy=True)
     class_grade_id = db.Column(db.Integer, db.ForeignKey('class_grade.id'), nullable=False)
+
     # class_grade = db.relationship('ClassGrade', backref=db.backref('classes', lazy=True))  # Quan hệ ngược
 
     def __str__(self):
         return self.name
 
+
 # Bang khoi lop
 class ClassGrade(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.Enum(KhoiLop), default=KhoiLop.Khoi10)
+    name = db.Column(db.Enum(KhoiLop), unique=True, default=KhoiLop.Khoi10)
     classes = relationship('Class', backref='class_grade', lazy=True)
     subjects = relationship('Subject', backref='class_grade', lazy=True)
 
     def __str__(self):
-        return self.name
+        return f"{self.name}"
+
 
 # Bảng năm
 class Year(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(9), nullable=False, default='2023-2024') # Ví dụ: "2023-2024"
+    name = db.Column(db.String(9), unique=True, nullable=False, default='2023-2024')  # Ví dụ: "2023-2024"
     semesters = relationship('Semester', backref='year', lazy=True)
     scores = relationship('Score', backref='year', lazy=True)
 
     def __str__(self):
         return self.name
+
 
 # Bảng học kỳ
 class Semester(db.Model):
@@ -118,6 +128,10 @@ class Semester(db.Model):
         db.UniqueConstraint('year_id', 'name', name='unique_year_semester'),
     )
 
+    def __str__(self):
+        return f"{self.name} - Year {self.year.name}"
+
+
 # Bảng môn học
 class Subject(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -127,32 +141,30 @@ class Subject(db.Model):
     semester_id = Column(db.Integer, db.ForeignKey('semester.id'), nullable=False)
     # class_grade = relationship('ClassGrade', backref='subjects')
     score_types_association = relationship('SubjectScoreType', backref='subject')
-    score_types = association_proxy('score_types_association','score_type')
+    score_types = association_proxy('score_types_association', 'score_type')
     __table_args__ = (
         db.UniqueConstraint('semester_id', 'name', name='unique_subject_semester'),
     )
+
     def __str__(self):
         return self.name
 
+
 # Bảng loại điểm
 class ScoreType(db.Model):
-    id = db.Column(db.Integer,primary_key=True)
+    id = db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(20), nullable=False)
-    he_so = db.Column(db.Integer,default=1)
-    subjects_association = relationship('SubjectScoreType',backref='score_type')
+    he_so = db.Column(db.Integer, default=1)
+    subjects_association = relationship('SubjectScoreType', backref='score_type')
     subjects = association_proxy('subjects_association', 'subject')
-
-
 
 
 # Bảng trung gian giữa điểm và loại điểm
 class SubjectScoreType(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    subject_id = db.Column('subject_id',Integer,ForeignKey('subject.id'),nullable=False)
-    score_type_id = db.Column('score_type_id',Integer,ForeignKey('score_type.id'),nullable=False)
-    so_cot_diem = db.Column(db.Integer,default=1)
-
-
+    subject_id = db.Column('subject_id', Integer, ForeignKey('subject.id'), nullable=False)
+    score_type_id = db.Column('score_type_id', Integer, ForeignKey('score_type.id'), nullable=False)
+    so_cot_diem = db.Column(db.Integer, default=1)
 
 
 # Bảng điểm
@@ -184,9 +196,9 @@ if __name__ == '__main__':
         db.create_all()
 
         admin1 = Admin(name='admin',
-                  username='admin',
-                  password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
-                  user_role=UserRole.ADMIN)
+                       username='admin',
+                       password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
+                       user_role=UserRole.ADMIN)
         db.session.add(admin1)
 
         teacher1 = Teacher(
@@ -203,7 +215,13 @@ if __name__ == '__main__':
         )
         db.session.add(teacher1)
 
-        classgrade1= ClassGrade(name=KhoiLop.Khoi10)
+        nhanvien1 = Staff(name='Nguyễn Văn A',
+                          username='staff1',
+                          password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
+                          user_role=UserRole.NHANVIEN)
+        db.session.add(nhanvien1)
+
+        classgrade1 = ClassGrade(name=KhoiLop.Khoi10)
         classgrade2 = ClassGrade(name=KhoiLop.Khoi11)
         classgrade3 = ClassGrade(name=KhoiLop.Khoi12)
         db.session.add(classgrade1)
@@ -218,7 +236,7 @@ if __name__ == '__main__':
         # Tạo một đối tượng Student
         student1 = Student(
             name="Nguyen Thi Lan",
-            username="studentA",
+            username="student1",
             password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
             user_role=UserRole.USER,
             sex=Gender.FEMALE,
@@ -234,10 +252,10 @@ if __name__ == '__main__':
         nam1 = Year()
         db.session.add(nam1)
 
-        hocky1 = Semester(year=nam1) # mặc định là học kì 1
+        hocky1 = Semester(year=nam1)  # mặc định là học kì 1
+        db.session.add(hocky1)
         hocky2 = Semester(name=HocKy.HK2, year=nam1)
         db.session.add(hocky2)
-
 
         # Tao mon hoc cua 1 khoi lop va cac cot diem trong mon hoc do
         so_cot_15p = 3
@@ -247,18 +265,26 @@ if __name__ == '__main__':
         diem_15p = ScoreType(name='Diem 15 phut', he_so=1)
         diem_1tiet = ScoreType(name='Diem 1 tiet', he_so=2)
         diem_thi_cuoi_ki = ScoreType(name='Diem thi gk', he_so=3)
+        db.session.add(diem_15p)
+        db.session.add(diem_1tiet)
+        db.session.add(diem_thi_cuoi_ki)
 
         toan10 = Subject(name="Toan10", semester=hocky1, class_grade=classgrade1)
         van10 = Subject(name='Van10', semester=hocky1, class_grade=classgrade1)
         anh10 = Subject(name='Anh10', semester=hocky1, class_grade=classgrade1)
+        db.session.add(toan10)
+        db.session.add(van10)
+        db.session.add(anh10)
 
         so_cot_diem15p_mon_toan = SubjectScoreType(subject=toan10, score_type=diem_15p, so_cot_diem=so_cot_15p)
         so_cot_diem1tiet_mon_toan = SubjectScoreType(subject=toan10, score_type=diem_1tiet, so_cot_diem=so_cot_1tiet)
+        db.session.add(so_cot_diem15p_mon_toan)
+        db.session.add(so_cot_diem1tiet_mon_toan)
 
         diem_toan_15p_hs1_hk1 = Score(student=student1, subject_score_type=so_cot_diem15p_mon_toan, so_diem=10,
-                                     year=nam1)
+                                      year=nam1)
         diem_toan_1tiet_hs1_hk1 = Score(student=student1, subject_score_type=so_cot_diem1tiet_mon_toan, so_diem=5,
-                                       year=nam1)
+                                        year=nam1)
         db.session.add(diem_toan_15p_hs1_hk1)
         db.session.add(diem_toan_1tiet_hs1_hk1)
         db.session.commit()

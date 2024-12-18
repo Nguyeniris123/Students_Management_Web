@@ -5,6 +5,8 @@ from app import app, db
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, logout_user
 from flask import redirect
+from sqlalchemy.exc import IntegrityError
+from flask import flash
 
 # Khởi tạo Flask-Admin
 admin = Admin(app, name='Quản trị hệ thống', template_mode='bootstrap4')
@@ -85,21 +87,23 @@ class StudentView(NhanVienAdminView):
     #         model.username = last_name.lower() + str(model.id)
     #     return super().on_model_change(form, model, is_created)
 
-class YearView(AdminView):
-    column_list = ['id', 'name', 'semesters']
-    form_columns = ['name']
-    column_filters = ['id', 'name']
-    form_args = {
-        'semesters': {
-            'query_factory': lambda: Semester.query.all(),  # Lấy tất cả ClassGrade
-            'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
-        }
-    }
 
 class SemesterView(AdminView):
     column_list = ['id', 'name', 'year', 'subjects']
     form_columns = ['name', 'year']
     column_filters = ['id', 'name']
+
+
+class YearView(AdminView):
+    column_list = ['id', 'name', 'semesters']
+    form_columns = ['name', 'semesters']
+    column_filters = ['id', 'name']
+    # form_args = {
+    #     'semesters': {
+    #         'query_factory': lambda: Semester.query.all(),  # Lấy tất cả ClassGrade
+    #         'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
+    #     }
+    # }
 
 
 class ClassView(NhanVienAdminView):
@@ -108,17 +112,18 @@ class ClassView(NhanVienAdminView):
         'class_grade.name': 'Grade'
     }
     column_searchable_list = ['id', 'name']
-    form_args = {
-        'class_grade': {
-            'query_factory': lambda: ClassGrade.query.all(),  # Lấy tất cả ClassGrade
-            'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
-        }
-    }
+    # form_args = {
+    #     'class_grade': {
+    #         'query_factory': lambda: ClassGrade.query.all(),  # Lấy tất cả ClassGrade
+    #         'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
+    #     }
+    # }
 
 
 class ClassGradeView(NhanVienAdminView):
     column_list = ['id', 'name', 'subjects', 'classes']
     column_searchable_list = ['id', 'name']
+
 
 
 class SubjectView(AdminView):
@@ -129,16 +134,16 @@ class SubjectView(AdminView):
     }
     form_columns = ['name', 'class_grade', 'semester', 'description']
     column_searchable_list = ['id', 'name']
-    form_args = {
-        'class_grade': {
-            'query_factory': lambda: ClassGrade.query.all(),  # Lấy tất cả ClassGrade
-            'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
-        },
-        'semester': {
-            'query_factory': lambda: Semester.query.all(),
-            'get_label': lambda x: f"{x.year} - {x.name}"  # Hiển thị năm học + học kỳ
-        }
-    }
+    # form_args = {
+    #     'class_grade': {
+    #         'query_factory': lambda: ClassGrade.query.all(),  # Lấy tất cả ClassGrade
+    #         'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
+    #     },
+    #     'semester': {
+    #         'query_factory': lambda: Semester.query.all(),
+    #         'get_label': lambda x: f"{x.year} - {x.name}"  # Hiển thị năm học + học kỳ
+    #     }
+    # }
 
 
 class ScoreView(GiaoVienAdminView):
