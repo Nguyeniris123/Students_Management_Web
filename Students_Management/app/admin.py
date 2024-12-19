@@ -1,5 +1,6 @@
 from datetime import date
-from app.models import Class, Student, User, UserRole, Semester, Subject, Score, ScoreType, ClassGrade, Year
+from app.models import (Class, Student, User, UserRole, Semester, Subject,
+                        Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge)
 from flask_admin import Admin, BaseView, expose
 from app import app, db
 from flask_admin.contrib.sqla import ModelView
@@ -55,41 +56,37 @@ class GiaoVienAdminView(ModelView):
 
 
 class StudentView(NhanVienAdminView):
-    column_list = ['id', 'name', 'username', 'sex', 'birth', 'address', 'phone', 'email', 'class', 'user_role', 'scores']
+    column_list = ['id', 'name', 'username', 'sex', 'birth', 'regulation_age', 'address', 'phone', 'email', 'class_', 'user_role', 'scores']
     form_columns = ['name', 'username', 'sex', 'birth', 'address', 'phone', 'email']
     column_searchable_list = ['id', 'name']
     column_editable_list = ['name', 'sex', 'birth', 'address', 'phone', 'email']
 
-    def on_model_change(self, form, model, is_created):
-        # Kiểm tra ngày sinh
-        if model.birth:
-            current_year = date.today().year
-            birth_year = model.birth.year
-            age = current_year - birth_year
-
-            if age < 15 or age > 20:
-                raise ValueError("Học sinh phải có độ tuổi từ 15 đến 20!")
-
-        # Tiếp tục với các thay đổi khác
-        super(StudentView, self).on_model_change(form, model, is_created)
-
     # def on_model_change(self, form, model, is_created):
-    #     # Tạo username nếu không có
-    #     if not model.username:  # Nếu username chưa được gán
-    #         name_parts = model.name.split()  # Tách tên thành các từ
-    #         last_name = name_parts[-1] if name_parts else ''  # Lấy từ cuối cùng của tên
-    #         model.username = last_name.lower() + str(model.id)
-    #     existing_user = Student.query.filter_by(username=model.username).first()
-    #     if existing_user:
-    #         model.username = last_name.lower() + str(model.id)
-    #     return super().on_model_change(form, model, is_created)
+    #     # Kiểm tra ngày sinh
+    #     if model.birth:
+    #         current_year = date.today().year
+    #         birth_year = model.birth.year
+    #         age = current_year - birth_year
+    #
+    #         if age < 15 or age > 20:
+    #             raise ValueError("Học sinh phải có độ tuổi từ 15 đến 20!")
+    #
+    #     # Tiếp tục với các thay đổi khác
+    #     super(StudentView, self).on_model_change(form, model, is_created)
+
 
 
 class ClassView(NhanVienAdminView):
-    column_list = ['id', 'name', 'students', 'max_students', 'class_grade']
+    column_list = ['id', 'name', 'students', 'regulation_max_student', 'class_grade']
+    form_columns = ['name', 'students', 'class_grade']
     column_labels = {
         'students': 'Students - Gender - Birth'
     }
+    column_searchable_list = ['id', 'name']
+
+
+class ClassGradeView(NhanVienAdminView):
+    column_list = ['id', 'name', 'subjects', 'classes']
     column_searchable_list = ['id', 'name']
 
 
@@ -105,10 +102,6 @@ class YearView(AdminView):
     column_filters = ['id', 'name']
 
 
-class ClassGradeView(NhanVienAdminView):
-    column_list = ['id', 'name', 'subjects', 'classes']
-    column_searchable_list = ['id', 'name']
-
 
 class SubjectView(AdminView):
     column_list = ['id', 'name', 'class_grade', 'semester', 'description']
@@ -118,10 +111,7 @@ class SubjectView(AdminView):
 
 
 class ScoreView(GiaoVienAdminView):
-    column_list = ['id', 'student', 'so_diem', 'attempt', 'year', 'subject', 'score_type']
-    column_labels = {
-
-    }
+    column_list = ['id', 'student', 'so_diem', 'attempt', 'subject', 'score_type']
     column_filters = ['id']
     can_export = True
 
@@ -130,6 +120,17 @@ class ScoreTypeView(GiaoVienAdminView):
     column_list = ['id', 'name', 'he_so']
     form_columns = ['name', 'he_so']
     column_filters = ['id', 'name']
+
+
+class RegulationMaxStudentView(AdminView):
+    column_list = ['id', 'name', 'max_students', 'classes']
+    form_columns = ['name', 'max_students', 'classes']
+
+
+class RegulationAgeView(AdminView):
+    column_list = ['id', 'name', 'min_age', 'max_age']
+    form_columns = ['name', 'min_age', 'max_age']
+
 
 class LogoutView(AuthenticatedView):
     @expose('/')
@@ -153,5 +154,7 @@ admin.add_view(SemesterView(Semester, db.session))
 admin.add_view(SubjectView(Subject, db.session))
 admin.add_view(ScoreView(Score, db.session))
 admin.add_view(ScoreTypeView(ScoreType, db.session))
+admin.add_view(RegulationMaxStudentView(RegulationMaxStudent, db.session))
+admin.add_view(RegulationAgeView(RegulationAge, db.session))
 admin.add_view(StatsView(name='Thống kê'))
 admin.add_view(LogoutView(name='Đăng xuất'))

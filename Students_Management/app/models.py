@@ -68,6 +68,7 @@ class Student(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Tham chiếu đến User
     # num_instances = 0
     class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False, default=1)
+    regulation_age_id = db.Column(db.Integer, db.ForeignKey('regulation_age.id'), nullable=False, default=1)
     scores = db.relationship('Score', backref='student', lazy=True)
 
     def __str__(self):
@@ -96,9 +97,10 @@ class Staff(User):
 class Class(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
-    max_students = db.Column(db.Integer, nullable=False, default=40)
-    students = relationship('Student', backref='class', lazy=True)
+    students = relationship('Student', backref='class_', lazy=True)
     class_grade_id = db.Column(db.Integer, db.ForeignKey('class_grade.id'), nullable=False)
+    # class_room_id = db.Column(db.Integer, db.ForeignKey('class_room.id'), nullable=False)
+    regulation_max_student_id = db.Column(db.Integer, db.ForeignKey('regulation_max_student.id'), nullable=False, default=1)
 
     # class_grade = db.relationship('ClassGrade', backref=db.backref('classes', lazy=True))  # Quan hệ ngược
 
@@ -122,7 +124,6 @@ class Year(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(9), unique=True, nullable=False, default='2023-2024')  # Ví dụ: "2023-2024"
     semesters = relationship('Semester', backref='year', lazy=True)
-    scores = relationship('Score', backref='year', lazy=True)
 
     def __str__(self):
         return self.name
@@ -139,7 +140,7 @@ class Semester(db.Model):
     )
 
     def __str__(self):
-        return f"{self.name} - {self.year.name}"
+        return f"{self.name} - {self.year}"
 
 
 # Bảng môn học
@@ -156,7 +157,7 @@ class Subject(db.Model):
     )
 
     def __str__(self):
-        return f"{self.name} - {self.semester.name}"
+        return f"{self.name} - {self.semester}"
 
 
 # Bảng loại điểm
@@ -179,24 +180,54 @@ class Score(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     so_diem = db.Column(db.Float, nullable=False)
     attempt = db.Column(db.Integer, default=1, nullable=False)
-    year_id = Column(db.Integer, db.ForeignKey('year.id'), nullable=False)
     student_id = db.Column(db.Integer, ForeignKey('student.id'), nullable=False)
     subject_id = db.Column(db.Integer, ForeignKey('subject.id'), nullable=False)
     score_type_id = Column(db.Integer, db.ForeignKey('score_type.id'), nullable=False)
     __table_args__ = (
-        db.UniqueConstraint('student_id', 'subject_id', 'score_type_id', 'attempt', 'year_id',
+        db.UniqueConstraint('student_id', 'subject_id', 'score_type_id', 'attempt',
                             name='unique_score_per_attempt'),
     )
 
     def __str__(self):
-        return f"{self.so_diem} - {self.score_type.name}"
+        return f"{self.so_diem} - {self.score_type.name} - {self.subject}"
 
 
-# class Regulations(db.Model):
+# Bảng quy định
+class Regulation(db.Model):
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.String(100), nullable=False)
+
+
+# Bảng quy định Số tuổi tối đa
+class RegulationAge(Regulation):
+    id = db.Column(db.Integer, db.ForeignKey('regulation.id'), primary_key=True)
+    min_age = db.Column(db.Integer, nullable=False, default = 15)
+    max_age = db.Column(db.Integer, nullable=False, default= 20)
+    students = db.relationship('Student', backref='regulation_age', lazy=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.min_age} - {self.max_age}"
+
+class RegulationMaxStudent(Regulation):
+    id = db.Column(db.Integer, db.ForeignKey('regulation.id'), primary_key=True)
+    max_students = db.Column(db.Integer, nullable=False, default=40)
+    classes = db.relationship('Class', backref='regulation_max_student', lazy=True)
+
+    def __str__(self):
+        return f"{self.name} - {self.max_students}"
+
+
+# class ClassRoom(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(100), nullable=False)
+#     classes = relationship('Class', backref='class_room', lazy=True)
+#
 #
 # class Schedule(db.Model):
 #     id = db.Column(db.Integer, primary_key=True)
+#     name = db.Column(db.String(100), nullable=False)
+
+
 
 
 if __name__ == '__main__':
@@ -219,7 +250,7 @@ if __name__ == '__main__':
             address="12 Nguyen Trai, HCMC",
             phone="0908123456",
             email="lan@example.com",
-            avatar="https://example.com/avatar.jpg",
+            avatar="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg",
         )
         db.session.add(teacher1)
 
@@ -236,10 +267,11 @@ if __name__ == '__main__':
         db.session.add(classgrade2)
         db.session.add(classgrade3)
 
-        class1 = Class(name='10A1', max_students=40, class_grade=classgrade1)
-        db.session.add(class1)
+        quydinh1 = RegulationAge (name='Độ tuổi')
+        quydinh2 = RegulationMaxStudent(name='Sĩ số')
 
-        class_instance = Class.query.first()  # Lấy lớp đầu tiên từ bảng `class`
+        class1 = Class(name='10A1', class_grade=classgrade1, regulation_max_student=quydinh2)
+        db.session.add(class1)
 
         # Tạo một đối tượng Student
         student1 = Student(
@@ -252,8 +284,9 @@ if __name__ == '__main__':
             address="12 Nguyen Trai, HCMC",
             phone="0908123456",
             email="lan@example.com",
-            avatar="https://example.com/avatar.jpg",
-            class_id=class_instance.id,  # Tham chiếu đến lớp
+            avatar="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg",
+            class_ = class1,  # Tham chiếu đến lớp
+            regulation_age = quydinh1,
         )
         db.session.add(student1)
 
@@ -284,9 +317,10 @@ if __name__ == '__main__':
         db.session.add(van10)
         db.session.add(anh10)
 
-        diem_toan_15p_hs1_hk1 = Score(so_diem=7, student=student1, year=nam1, subject=toan10, score_type=diem_15p1)
-        diem_toan_1tiet_hs1_hk1 = Score(so_diem=10, student=student1, year=nam1, subject=toan10, score_type=diem_1tiet1)
-        diem_toan_ck_hs1_hk1 = Score(so_diem=5, student=student1, year=nam1, subject=toan10, score_type=diem_ck1)
+        diem_toan_15p_hs1_hk1 = Score(so_diem=7, student=student1, subject=toan10, score_type=diem_15p1)
+        diem_toan_1tiet_hs1_hk1 = Score(so_diem=10, student=student1, subject=toan10, score_type=diem_1tiet1)
+        diem_toan_ck_hs1_hk1 = Score(so_diem=5, student=student1, subject=toan10, score_type=diem_ck1)
+
 
         db.session.add(diem_toan_15p_hs1_hk1)
         db.session.add(diem_toan_1tiet_hs1_hk1)
