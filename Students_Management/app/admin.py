@@ -88,6 +88,22 @@ class StudentView(NhanVienAdminView):
     #     return super().on_model_change(form, model, is_created)
 
 
+class ClassView(NhanVienAdminView):
+    column_list = ['id', 'name', 'students', 'max_students', 'class_grade.name']
+    column_labels = {
+        'class_grade.name': 'Grade',
+        'students': 'Students - Gender - Birth'
+
+    }
+    column_searchable_list = ['id', 'name']
+    # form_args = {
+    #     'class_grade': {
+    #         'query_factory': lambda: ClassGrade.query.all(),  # Lấy tất cả ClassGrade
+    #         'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
+    #     }
+    # }
+
+
 class SemesterView(AdminView):
     column_list = ['id', 'name', 'year', 'subjects']
     form_columns = ['name', 'year']
@@ -106,28 +122,13 @@ class YearView(AdminView):
     # }
 
 
-class ClassView(NhanVienAdminView):
-    column_list = ['id', 'name', 'students', 'max_students', 'class_grade.name']
-    column_labels = {
-        'class_grade.name': 'Grade'
-    }
-    column_searchable_list = ['id', 'name']
-    # form_args = {
-    #     'class_grade': {
-    #         'query_factory': lambda: ClassGrade.query.all(),  # Lấy tất cả ClassGrade
-    #         'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
-    #     }
-    # }
-
-
 class ClassGradeView(NhanVienAdminView):
     column_list = ['id', 'name', 'subjects', 'classes']
     column_searchable_list = ['id', 'name']
 
 
-
 class SubjectView(AdminView):
-    column_list = ['id', 'name', 'class_grade.name', 'semester.name', 'description']
+    column_list = ['id', 'name', 'class_grade.name', 'semester', 'description']
     column_labels = {
         'class_grade.name': 'Grade',
         'semester.name': 'Semester'
@@ -152,7 +153,7 @@ class ScoreView(GiaoVienAdminView):
 
     }
     column_filters = ['id']
-
+    can_export = True
 
 class LogoutView(AuthenticatedView):
     @expose('/')

@@ -61,7 +61,7 @@ class Student(User):
     class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False, default=1)
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - {self.sex} - {self.birth}"
 
 
 # def create_student(name, password): #dua vao khoi_lop
@@ -129,7 +129,7 @@ class Semester(db.Model):
     )
 
     def __str__(self):
-        return f"{self.name} - Year {self.year.name}"
+        return f"{self.name} - {self.year.name}"
 
 
 # Bảng môn học
@@ -147,7 +147,7 @@ class Subject(db.Model):
     )
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - {self.semester.name}"
 
 
 # Bảng loại điểm
