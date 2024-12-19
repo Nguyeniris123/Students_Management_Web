@@ -35,6 +35,15 @@ class KhoiLop(RoleEnum):
     Khoi11 = 2
     Khoi12 = 3
 
+class LoaiDiem(RoleEnum):
+    diem15p = 1
+    diem1tiet = 2
+    diemck = 3
+
+class HeSo(RoleEnum):
+    heso1 = 1
+    heso2= 2
+    heso3 = 3
 
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
@@ -59,6 +68,7 @@ class Student(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Tham chiếu đến User
     # num_instances = 0
     class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False, default=1)
+    scores = db.relationship('Score', backref='student', lazy=True)
 
     def __str__(self):
         return f"{self.name} - {self.sex} - {self.birth}"
@@ -134,14 +144,13 @@ class Semester(db.Model):
 
 # Bảng môn học
 class Subject(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
     description = db.Column(db.String(200))
     class_grade_id = Column(db.Integer, db.ForeignKey('class_grade.id'), nullable=False)
     semester_id = Column(db.Integer, db.ForeignKey('semester.id'), nullable=False)
     # class_grade = relationship('ClassGrade', backref='subjects')
-    score_types_association = relationship('SubjectScoreType', backref='subject')
-    score_types = association_proxy('score_types_association', 'score_type')
+    scores = db.relationship('Score', backref='subject', lazy=True)
     __table_args__ = (
         db.UniqueConstraint('semester_id', 'name', name='unique_subject_semester'),
     )
@@ -152,19 +161,17 @@ class Subject(db.Model):
 
 # Bảng loại điểm
 class ScoreType(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(20), nullable=False)
-    he_so = db.Column(db.Integer, default=1)
-    subjects_association = relationship('SubjectScoreType', backref='score_type')
-    subjects = association_proxy('subjects_association', 'subject')
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
+    name = db.Column(db.Enum(LoaiDiem), default=LoaiDiem.diem15p, nullable=False)
+    he_so = db.Column(db.Enum(HeSo), default=HeSo.heso1, nullable=False)
+    scores = db.relationship('Score', backref='score_type', lazy=True)
 
+    __table_args__ = (
+        db.UniqueConstraint('name', 'he_so', name='unique_name_he_so'),
+    )
 
-# Bảng trung gian giữa điểm và loại điểm
-class SubjectScoreType(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
-    subject_id = db.Column('subject_id', Integer, ForeignKey('subject.id'), nullable=False)
-    score_type_id = db.Column('score_type_id', Integer, ForeignKey('score_type.id'), nullable=False)
-    so_cot_diem = db.Column(db.Integer, default=1)
+    def __str__(self):
+        return f"{self.name} - {self.he_so}"
 
 
 # Bảng điểm
@@ -174,14 +181,15 @@ class Score(db.Model):
     attempt = db.Column(db.Integer, default=1, nullable=False)
     year_id = Column(db.Integer, db.ForeignKey('year.id'), nullable=False)
     student_id = db.Column(db.Integer, ForeignKey('student.id'), nullable=False)
-    subject_score_type_id = db.Column(db.Integer, ForeignKey('subject_score_type.id'), nullable=False)
-    # relationship voi bang Student va bang MonHoc-LoaiDiem
-    student = relationship('Student', backref='score')
-    subject_score_type = relationship('SubjectScoreType', backref='score')
+    subject_id = db.Column(db.Integer, ForeignKey('subject.id'), nullable=False)
+    score_type_id = Column(db.Integer, db.ForeignKey('score_type.id'), nullable=False)
     __table_args__ = (
-        db.UniqueConstraint('student_id', 'subject_score_type_id', 'attempt', 'year_id',
-                            name='unique_point_of_a_subject_in_a_semester'),
+        db.UniqueConstraint('student_id', 'subject_id', 'score_type_id', 'attempt', 'year_id',
+                            name='unique_score_per_attempt'),
     )
+
+    def __str__(self):
+        return f"{self.so_diem} - {self.score_type.name}"
 
 
 # class Regulations(db.Model):
@@ -257,17 +265,17 @@ if __name__ == '__main__':
         hocky2 = Semester(name=HocKy.HK2, year=nam1)
         db.session.add(hocky2)
 
-        # Tao mon hoc cua 1 khoi lop va cac cot diem trong mon hoc do
-        so_cot_15p = 3
-        so_cot_1tiet = 2
-        so_cot_ck = 1
-
-        diem_15p = ScoreType(name='Diem 15 phut', he_so=1)
-        diem_1tiet = ScoreType(name='Diem 1 tiet', he_so=2)
-        diem_thi_cuoi_ki = ScoreType(name='Diem thi gk', he_so=3)
-        db.session.add(diem_15p)
-        db.session.add(diem_1tiet)
-        db.session.add(diem_thi_cuoi_ki)
+        # # Tao mon hoc cua 1 khoi lop va cac cot diem trong mon hoc do
+        # so_cot_15p = 3
+        # so_cot_1tiet = 2
+        # so_cot_ck = 1
+        #
+        diem_15p1 = ScoreType(name=LoaiDiem.diem15p, he_so=HeSo.heso1)
+        diem_1tiet1 = ScoreType(name=LoaiDiem.diem1tiet, he_so=HeSo.heso2)
+        diem_ck1= ScoreType(name=LoaiDiem.diemck, he_so=HeSo.heso3)
+        db.session.add(diem_15p1)
+        db.session.add(diem_1tiet1)
+        db.session.add(diem_ck1)
 
         toan10 = Subject(name="Toan10", semester=hocky1, class_grade=classgrade1)
         van10 = Subject(name='Van10', semester=hocky1, class_grade=classgrade1)
@@ -276,15 +284,12 @@ if __name__ == '__main__':
         db.session.add(van10)
         db.session.add(anh10)
 
-        so_cot_diem15p_mon_toan = SubjectScoreType(subject=toan10, score_type=diem_15p, so_cot_diem=so_cot_15p)
-        so_cot_diem1tiet_mon_toan = SubjectScoreType(subject=toan10, score_type=diem_1tiet, so_cot_diem=so_cot_1tiet)
-        db.session.add(so_cot_diem15p_mon_toan)
-        db.session.add(so_cot_diem1tiet_mon_toan)
+        diem_toan_15p_hs1_hk1 = Score(so_diem=7, student=student1, year=nam1, subject=toan10, score_type=diem_15p1)
+        diem_toan_1tiet_hs1_hk1 = Score(so_diem=10, student=student1, year=nam1, subject=toan10, score_type=diem_1tiet1)
+        diem_toan_ck_hs1_hk1 = Score(so_diem=5, student=student1, year=nam1, subject=toan10, score_type=diem_ck1)
 
-        diem_toan_15p_hs1_hk1 = Score(student=student1, subject_score_type=so_cot_diem15p_mon_toan, so_diem=10,
-                                      year=nam1)
-        diem_toan_1tiet_hs1_hk1 = Score(student=student1, subject_score_type=so_cot_diem1tiet_mon_toan, so_diem=5,
-                                        year=nam1)
         db.session.add(diem_toan_15p_hs1_hk1)
         db.session.add(diem_toan_1tiet_hs1_hk1)
+        db.session.add(diem_toan_ck_hs1_hk1)
+
         db.session.commit()

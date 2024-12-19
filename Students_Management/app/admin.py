@@ -55,10 +55,7 @@ class GiaoVienAdminView(ModelView):
 
 
 class StudentView(NhanVienAdminView):
-    column_list = ['id', 'name', 'username', 'sex', 'birth', 'address', 'phone', 'email', 'class.name', 'user_role']
-    column_labels = {
-        'class.name': 'Class'
-    }
+    column_list = ['id', 'name', 'username', 'sex', 'birth', 'address', 'phone', 'email', 'class', 'user_role', 'scores']
     form_columns = ['name', 'username', 'sex', 'birth', 'address', 'phone', 'email']
     column_searchable_list = ['id', 'name']
     column_editable_list = ['name', 'sex', 'birth', 'address', 'phone', 'email']
@@ -89,19 +86,11 @@ class StudentView(NhanVienAdminView):
 
 
 class ClassView(NhanVienAdminView):
-    column_list = ['id', 'name', 'students', 'max_students', 'class_grade.name']
+    column_list = ['id', 'name', 'students', 'max_students', 'class_grade']
     column_labels = {
-        'class_grade.name': 'Grade',
         'students': 'Students - Gender - Birth'
-
     }
     column_searchable_list = ['id', 'name']
-    # form_args = {
-    #     'class_grade': {
-    #         'query_factory': lambda: ClassGrade.query.all(),  # Lấy tất cả ClassGrade
-    #         'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
-    #     }
-    # }
 
 
 class SemesterView(AdminView):
@@ -114,12 +103,6 @@ class YearView(AdminView):
     column_list = ['id', 'name', 'semesters']
     form_columns = ['name', 'semesters']
     column_filters = ['id', 'name']
-    # form_args = {
-    #     'semesters': {
-    #         'query_factory': lambda: Semester.query.all(),  # Lấy tất cả ClassGrade
-    #         'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
-    #     }
-    # }
 
 
 class ClassGradeView(NhanVienAdminView):
@@ -128,32 +111,25 @@ class ClassGradeView(NhanVienAdminView):
 
 
 class SubjectView(AdminView):
-    column_list = ['id', 'name', 'class_grade.name', 'semester', 'description']
-    column_labels = {
-        'class_grade.name': 'Grade',
-        'semester.name': 'Semester'
-    }
+    column_list = ['id', 'name', 'class_grade', 'semester', 'description']
     form_columns = ['name', 'class_grade', 'semester', 'description']
     column_searchable_list = ['id', 'name']
-    # form_args = {
-    #     'class_grade': {
-    #         'query_factory': lambda: ClassGrade.query.all(),  # Lấy tất cả ClassGrade
-    #         'get_label': lambda x: x.name  # Hiển thị giá trị Enum ("Khối 10", ...)
-    #     },
-    #     'semester': {
-    #         'query_factory': lambda: Semester.query.all(),
-    #         'get_label': lambda x: f"{x.year} - {x.name}"  # Hiển thị năm học + học kỳ
-    #     }
-    # }
+
 
 
 class ScoreView(GiaoVienAdminView):
-    column_list = []
+    column_list = ['id', 'student', 'so_diem', 'attempt', 'year', 'subject', 'score_type']
     column_labels = {
 
     }
     column_filters = ['id']
     can_export = True
+
+
+class ScoreTypeView(GiaoVienAdminView):
+    column_list = ['id', 'name', 'he_so']
+    form_columns = ['name', 'he_so']
+    column_filters = ['id', 'name']
 
 class LogoutView(AuthenticatedView):
     @expose('/')
@@ -169,12 +145,13 @@ class StatsView(AuthenticatedAdminView):
 
 
 # Thêm các bảng vào Flask-Admin
-admin.add_view(StudentView(Student, db.session))  # Nhân viên có thể truy cập
-admin.add_view(ClassView(Class, db.session))  # Chỉ Nhân viên có thể truy cập
-admin.add_view(ClassGradeView(ClassGrade, db.session))  # Chỉ Nhân viên có thể truy cập
+admin.add_view(StudentView(Student, db.session))
+admin.add_view(ClassView(Class, db.session))
+admin.add_view(ClassGradeView(ClassGrade, db.session))
 admin.add_view(YearView(Year, db.session))
 admin.add_view(SemesterView(Semester, db.session))
 admin.add_view(SubjectView(Subject, db.session))
-admin.add_view(ScoreView(Score, db.session))  # Chỉ giáo viên có thể truy cập
+admin.add_view(ScoreView(Score, db.session))
+admin.add_view(ScoreTypeView(ScoreType, db.session))
 admin.add_view(StatsView(name='Thống kê'))
-admin.add_view(LogoutView(name='Đăng xuất'))  # Đăng xuất trên trang flask-admin
+admin.add_view(LogoutView(name='Đăng xuất'))
