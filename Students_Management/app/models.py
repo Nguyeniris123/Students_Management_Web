@@ -45,6 +45,18 @@ class HeSo(RoleEnum):
     heso2= 2
     heso3 = 3
 
+
+class BuoiDay(RoleEnum):
+    sang = 1
+    chieu = 2
+
+class TietHoc(RoleEnum):
+    tiet1 = 1
+    tiet2 = 2
+    tiet3 = 3
+    tiet4 = 4
+    tiet5 = 5
+
 class User(db.Model, UserMixin):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(50), nullable=False)
@@ -85,6 +97,9 @@ class Student(User):
 class Teacher(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Khóa chính tham chiếu từ User
     department = db.Column(db.String(100), nullable=True)  # Khoa/Bộ môn của giáo viên
+    schedules = relationship('Schedule', backref='teacher', lazy=True)
+    def __str__(self):
+        return f"{self.name}"
 
 
 # Lớp Staff
@@ -98,8 +113,9 @@ class Class(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), unique=True, nullable=False)
     students = relationship('Student', backref='class_', lazy=True)
+    schedules = relationship('Schedule', backref='class_', lazy=True)
     class_grade_id = db.Column(db.Integer, db.ForeignKey('class_grade.id'), nullable=False)
-    # class_room_id = db.Column(db.Integer, db.ForeignKey('class_room.id'), nullable=False)
+    class_room_id = db.Column(db.Integer, db.ForeignKey('class_room.id'), nullable=False)
     regulation_max_student_id = db.Column(db.Integer, db.ForeignKey('regulation_max_student.id'), nullable=False, default=1)
 
     # class_grade = db.relationship('ClassGrade', backref=db.backref('classes', lazy=True))  # Quan hệ ngược
@@ -135,6 +151,7 @@ class Semester(db.Model):
     name = db.Column(db.Enum(HocKy), default=HocKy.HK1)  # Học kỳ 1 hoặc 2, hoặc cả 2
     year_id = Column(db.Integer, db.ForeignKey('year.id'), nullable=False)
     subjects = relationship('Subject', backref='semester')
+    schedules = relationship('Schedule', backref='semester', lazy=True)
     __table_args__ = (
         db.UniqueConstraint('year_id', 'name', name='unique_year_semester'),
     )
@@ -217,17 +234,28 @@ class RegulationMaxStudent(Regulation):
         return f"{self.name} - {self.max_students}"
 
 
-# class ClassRoom(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(100), nullable=False)
-#     classes = relationship('Class', backref='class_room', lazy=True)
-#
-#
-# class Schedule(db.Model):
-#     id = db.Column(db.Integer, primary_key=True)
-#     name = db.Column(db.String(100), nullable=False)
+class ClassRoom(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    name = db.Column(db.String(100), nullable=False)
+    classes = relationship('Class', backref='class_room', lazy=True)
 
 
+class Schedule(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    date_work = db.Column(db.Date, nullable=True, default=date(2024, 12, 4))
+    teaching_session = db.Column(db.Enum(BuoiDay), default=BuoiDay.sang)
+    class_period = db.Column(db.Enum(TietHoc), default=TietHoc.tiet1)
+    class_id = Column(db.Integer, db.ForeignKey('class.id'), nullable=False)
+    teacher_id = Column(db.Integer, db.ForeignKey('teacher.id'), nullable=False)
+    semester_id = Column(db.Integer, db.ForeignKey('semester.id'), nullable=False)
+
+    # def __str__(self):
+    #     return f"{self.name} - {self.min_age} - {self.max_age}"
+
+    __table_args__ = (
+        db.UniqueConstraint('date_work','teaching_session','class_period',
+                            'class_id', 'semester_id', name='unique_schedule'),
+    )
 
 
 if __name__ == '__main__':
@@ -254,11 +282,31 @@ if __name__ == '__main__':
         )
         db.session.add(teacher1)
 
+        teacher2 = Teacher(
+            name="Nhật Minh",
+            username="teacher2",
+            password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
+            user_role=UserRole.GIAOVIEN,
+            sex=Gender.FEMALE,
+            birth=date(1998, 6, 20),
+            address="12 Nguyen Trai, HCMC",
+            phone="0908123456",
+            email="lan@example.com",
+            avatar="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg",
+        )
+        db.session.add(teacher2)
+
         nhanvien1 = Staff(name='Nguyễn Văn A',
                           username='staff1',
                           password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
                           user_role=UserRole.NHANVIEN)
         db.session.add(nhanvien1)
+
+        nhanvien2 = Staff(name='Bùi Quyền',
+                          username='staff2',
+                          password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
+                          user_role=UserRole.NHANVIEN)
+        db.session.add(nhanvien2)
 
         classgrade1 = ClassGrade(name=KhoiLop.Khoi10)
         classgrade2 = ClassGrade(name=KhoiLop.Khoi11)
@@ -270,7 +318,9 @@ if __name__ == '__main__':
         quydinh1 = RegulationAge (name='Độ tuổi')
         quydinh2 = RegulationMaxStudent(name='Sĩ số')
 
-        class1 = Class(name='10A1', class_grade=classgrade1, regulation_max_student=quydinh2)
+        phonghoc1 = ClassRoom(name='D101')
+
+        class1 = Class(name='10A1', class_grade=classgrade1, regulation_max_student=quydinh2, class_room=phonghoc1)
         db.session.add(class1)
 
         # Tạo một đối tượng Student
@@ -298,11 +348,9 @@ if __name__ == '__main__':
         hocky2 = Semester(name=HocKy.HK2, year=nam1)
         db.session.add(hocky2)
 
-        # # Tao mon hoc cua 1 khoi lop va cac cot diem trong mon hoc do
-        # so_cot_15p = 3
-        # so_cot_1tiet = 2
-        # so_cot_ck = 1
-        #
+        lichday1 = Schedule(teacher=teacher1, semester=hocky1, class_=class1)
+        db.session.add(lichday1)
+
         diem_15p1 = ScoreType(name=LoaiDiem.diem15p, he_so=HeSo.heso1)
         diem_1tiet1 = ScoreType(name=LoaiDiem.diem1tiet, he_so=HeSo.heso2)
         diem_ck1= ScoreType(name=LoaiDiem.diemck, he_so=HeSo.heso3)

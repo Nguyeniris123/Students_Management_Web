@@ -1,6 +1,6 @@
 from datetime import date
 from app.models import (Class, Student, User, UserRole, Semester, Subject,
-                        Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge)
+                        Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge, Schedule)
 from flask_admin import Admin, BaseView, expose
 from app import app, db
 from flask_admin.contrib.sqla import ModelView
@@ -132,6 +132,11 @@ class RegulationAgeView(AdminView):
     form_columns = ['name', 'min_age', 'max_age']
 
 
+class ScheduleView(AdminView):
+    column_list = []
+    form_columns = []
+
+
 class LogoutView(AuthenticatedView):
     @expose('/')
     def index(self):
@@ -156,5 +161,6 @@ admin.add_view(ScoreView(Score, db.session))
 admin.add_view(ScoreTypeView(ScoreType, db.session))
 admin.add_view(RegulationMaxStudentView(RegulationMaxStudent, db.session))
 admin.add_view(RegulationAgeView(RegulationAge, db.session))
+admin.add_view(ScheduleView(Schedule, db.session))
 admin.add_view(StatsView(name='Thống kê'))
 admin.add_view(LogoutView(name='Đăng xuất'))
