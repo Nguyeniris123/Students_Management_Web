@@ -90,19 +90,72 @@ BEGIN
       AND score_type_id = (SELECT id FROM score_type WHERE name = 'diemck');
 
     -- Nếu loại điểm cũ không phải là diemck và loại điểm mới là diemck
-    IF OLD.score_type_id <> (SELECT id FROM score_type WHERE name = 'diemck')
-       AND NEW.score_type_id = (SELECT id FROM score_type WHERE name = 'diemck')
-       AND count_cuoi_ky >= 1 THEN
+    IF NEW.score_type_id = (SELECT id FROM score_type WHERE name = 'diemck') AND count_cuoi_ky >= 1 THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Mỗi học sinh chỉ có 1 điểm thi cuối kỳ duy nhất.';
     END IF;
-
 END$$
 DELIMITER ;
 
-DROP TRIGGER IF EXISTS trg_check_scores_insert;
-DROP TRIGGER IF EXISTS trg_check_scores_update;
+-- Năm của học kỳ và năm của khối lớp phải trùng nhau khi tạo hoặc chỉnh sửa môn học (Subject)
+DELIMITER $$
+CREATE TRIGGER trg_validate_subject_year_insert
+BEFORE INSERT ON subject
+FOR EACH ROW
+BEGIN
+    DECLARE semester_year INT;
+    DECLARE class_grade_year INT;
 
-SHOW TABLES;
+    -- Lấy năm của học kỳ
+    SELECT year_id INTO semester_year
+    FROM semester
+    WHERE id = NEW.semester_id;
+
+    -- Lấy năm của khối lớp
+    SELECT year_id INTO class_grade_year
+    FROM class_grade
+    WHERE id = NEW.class_grade_id;
+
+    -- Kiểm tra xem năm có trùng nhau hay không
+    IF semester_year != class_grade_year THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Năm của học kỳ và năm của khối lớp không trùng nhau.';
+    END IF;
+END$$
+DELIMITER ;
+
+DELIMITER $$
+
+CREATE TRIGGER trg_validate_subject_year_update
+BEFORE UPDATE ON subject
+FOR EACH ROW
+BEGIN
+    DECLARE semester_year INT;
+    DECLARE class_grade_year INT;
+
+    -- Lấy năm của học kỳ
+    SELECT year_id INTO semester_year
+    FROM semester
+    WHERE id = NEW.semester_id;
+
+    -- Lấy năm của khối lớp
+    SELECT year_id INTO class_grade_year
+    FROM class_grade
+    WHERE id = NEW.class_grade_id;
+
+    -- Kiểm tra nếu năm không khớp
+    IF semester_year != class_grade_year THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Năm của học kỳ và năm của khối lớp không trùng nhau.';
+    END IF;
+END$$
+
+DELIMITER ;
+
+-- DROP TRIGGER IF EXISTS trg_check_scores_insert;
+-- DROP TRIGGER IF EXISTS trg_check_scores_update;
+-- DROP TRIGGER IF EXISTS trg_validate_subject_year_insert;
+-- DROP TRIGGER IF EXISTS trg_validate_subject_year_update;
+
 
 

@@ -77,8 +77,8 @@ class StudentView(NhanVienAdminView):
 
 
 class ClassView(NhanVienAdminView):
-    column_list = ['id', 'name', 'students', 'regulation_max_student', 'class_grade']
-    form_columns = ['name', 'students', 'class_grade']
+    column_list = ['id', 'name', 'students', 'regulation_max_student', 'class_grade', 'class_room']
+    form_columns = ['name', 'students', 'class_grade', 'class_room']
     column_labels = {
         'students': 'Students - Gender - Birth'
     }
@@ -86,19 +86,19 @@ class ClassView(NhanVienAdminView):
 
 
 class ClassGradeView(NhanVienAdminView):
-    column_list = ['id', 'name', 'subjects', 'classes']
+    column_list = ['id', 'name', 'subjects', 'classes', 'year']
     column_searchable_list = ['id', 'name']
 
 
 class SemesterView(AdminView):
     column_list = ['id', 'name', 'year', 'subjects']
-    form_columns = ['name', 'year']
+    form_columns = ['name', 'year', 'subjects']
     column_filters = ['id', 'name']
 
 
 class YearView(AdminView):
-    column_list = ['id', 'name', 'semesters']
-    form_columns = ['name', 'semesters']
+    column_list = ['id', 'name', 'semesters', 'class_grades']
+    form_columns = ['name', 'semesters', 'class_grades']
     column_filters = ['id', 'name']
 
 

@@ -80,24 +80,18 @@ class Student(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Tham chiếu đến User
     # num_instances = 0
     class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False, default=1)
-    regulation_age_id = db.Column(db.Integer, db.ForeignKey('regulation_age.id'), nullable=False, default=1)
+    regulation_age_id = db.Column(db.Integer, db.ForeignKey('regulation_age.id'), nullable=False, default=2)
     scores = db.relationship('Score', backref='student', lazy=True)
 
     def __str__(self):
         return f"{self.name} - {self.sex} - {self.birth}"
 
 
-# def create_student(name, password): #dua vao khoi_lop
-#     Student.num_instances += 1 # co the bi trung
-#     username = str(int(ma_hs_khoi10) + Student.num_instances)
-#     password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
-#     return Student(name=name,username=username,password=password)
-
 # Lớp Teacher
 class Teacher(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Khóa chính tham chiếu từ User
     department = db.Column(db.String(100), nullable=True)  # Khoa/Bộ môn của giáo viên
-    schedules = relationship('Schedule', backref='teacher', lazy=True)
+    schedules = relationship('Schedule', backref='teacher', lazy=True, cascade="all, delete-orphan")
     def __str__(self):
         return f"{self.name}"
 
@@ -111,34 +105,41 @@ class Staff(User):
 # Bảng lớp học
 class Class(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.String(100), unique=True, nullable=False)
+    name = db.Column(db.String(100), nullable=False)
     students = relationship('Student', backref='class_', lazy=True)
-    schedules = relationship('Schedule', backref='class_', lazy=True)
+    schedules = relationship('Schedule', backref='class_', lazy=True, cascade="all, delete-orphan")
     class_grade_id = db.Column(db.Integer, db.ForeignKey('class_grade.id'), nullable=False)
     class_room_id = db.Column(db.Integer, db.ForeignKey('class_room.id'), nullable=False)
     regulation_max_student_id = db.Column(db.Integer, db.ForeignKey('regulation_max_student.id'), nullable=False, default=1)
 
-    # class_grade = db.relationship('ClassGrade', backref=db.backref('classes', lazy=True))  # Quan hệ ngược
+    __table_args__ = (
+        db.UniqueConstraint('name', 'class_grade_id', name='unique_name_class_grade'),
+    )
 
     def __str__(self):
-        return self.name
+        return f"{self.name} - {self.class_room}"
 
 
 # Bang khoi lop
 class ClassGrade(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
-    name = db.Column(db.Enum(KhoiLop), unique=True, default=KhoiLop.Khoi10)
+    name = db.Column(db.Enum(KhoiLop), default=KhoiLop.Khoi10)
+    year_id = Column(db.Integer, db.ForeignKey('year.id'), nullable=False)
     classes = relationship('Class', backref='class_grade', lazy=True)
     subjects = relationship('Subject', backref='class_grade', lazy=True)
+    __table_args__ = (
+        db.UniqueConstraint('year_id', 'name', name='unique_year_class_grade'),
+    )
 
     def __str__(self):
-        return f"{self.name}"
+        return f"{self.name} - {self.year}"
 
 
 # Bảng năm
 class Year(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(9), unique=True, nullable=False, default='2023-2024')  # Ví dụ: "2023-2024"
+    class_grades = relationship('ClassGrade', backref='year', lazy=True)
     semesters = relationship('Semester', backref='year', lazy=True)
 
     def __str__(self):
@@ -151,7 +152,7 @@ class Semester(db.Model):
     name = db.Column(db.Enum(HocKy), default=HocKy.HK1)  # Học kỳ 1 hoặc 2, hoặc cả 2
     year_id = Column(db.Integer, db.ForeignKey('year.id'), nullable=False)
     subjects = relationship('Subject', backref='semester')
-    schedules = relationship('Schedule', backref='semester', lazy=True)
+    schedules = relationship('Schedule', backref='semester', lazy=True, cascade="all, delete-orphan")
     __table_args__ = (
         db.UniqueConstraint('year_id', 'name', name='unique_year_semester'),
     )
@@ -167,7 +168,6 @@ class Subject(db.Model):
     description = db.Column(db.String(200))
     class_grade_id = Column(db.Integer, db.ForeignKey('class_grade.id'), nullable=False)
     semester_id = Column(db.Integer, db.ForeignKey('semester.id'), nullable=False)
-    # class_grade = relationship('ClassGrade', backref='subjects')
     scores = db.relationship('Score', backref='subject', lazy=True)
     __table_args__ = (
         db.UniqueConstraint('semester_id', 'name', name='unique_subject_semester'),
@@ -239,6 +239,8 @@ class ClassRoom(db.Model):
     name = db.Column(db.String(100), nullable=False)
     classes = relationship('Class', backref='class_room', lazy=True)
 
+    def __str__(self):
+        return f"{self.name}"
 
 class Schedule(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -308,9 +310,12 @@ if __name__ == '__main__':
                           user_role=UserRole.NHANVIEN)
         db.session.add(nhanvien2)
 
-        classgrade1 = ClassGrade(name=KhoiLop.Khoi10)
-        classgrade2 = ClassGrade(name=KhoiLop.Khoi11)
-        classgrade3 = ClassGrade(name=KhoiLop.Khoi12)
+        nam1 = Year()
+        db.session.add(nam1)
+
+        classgrade1 = ClassGrade(name=KhoiLop.Khoi10, year=nam1)
+        classgrade2 = ClassGrade(name=KhoiLop.Khoi11, year=nam1)
+        classgrade3 = ClassGrade(name=KhoiLop.Khoi12, year=nam1)
         db.session.add(classgrade1)
         db.session.add(classgrade2)
         db.session.add(classgrade3)
@@ -339,9 +344,6 @@ if __name__ == '__main__':
             regulation_age = quydinh1,
         )
         db.session.add(student1)
-
-        nam1 = Year()
-        db.session.add(nam1)
 
         hocky1 = Semester(year=nam1)  # mặc định là học kì 1
         db.session.add(hocky1)
