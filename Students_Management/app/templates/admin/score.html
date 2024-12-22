@@ -1,0 +1,133 @@
+{% extends 'admin/master.html' %}
+{% block head %}
+{{ super() }}
+<link rel="shortcut icon" href="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499755/images_oyg6ud.png">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style.css') }}">
+{% endblock %}
+{% block body %}
+<h1 class="text-center mt-1">Bảng điểm môn học</h1>
+
+<!-- Form chọn lớp và môn học -->
+<form method="get" action="{{ url_for('scoreview.index') }}">
+    <div class="row">
+        <!-- Dropdown chọn lớp -->
+        <div class="col-6">
+            <label for="class">Lớp</label>
+            <select class="form-control" id="class" name="class">
+                {% for cls in classes %}
+                <option value="{{ cls.id }}"
+                        {% if cls.id == request.args.get('class')|int %} selected {% endif %}>
+                    {{ cls.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+
+        <!-- Dropdown chọn môn học -->
+        <div class="col-6">
+            <label for="subject">Môn học</label>
+            <select class="form-control" id="subject" name="subject">
+                {% for subj in subjects %}
+                <option value="{{ subj.id }}"
+                        {% if subj.id == request.args.get('subject')|int %} selected {% endif %}>
+                    {{ subj.name }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+    </div>
+    <button class="btn btn-primary mt-3" type="submit">Hiển thị</button>
+</form>
+
+
+<hr>
+
+<div class="students-container">
+    {% if students %}
+    {% for student in students %}
+    <div class="student-box mb-4 p-3 border">
+        <h5> {{ loop.index }} - {{ student.name }}</h5>
+
+        <!-- Điểm 15 phút -->
+        <div class="score-section mb-3">
+            <strong>15 phút:</strong>
+            <div class="scores d-flex align-items-center flex-wrap">
+                {% if student_scores[student.id]["15 phút"] %}
+                {% for score in student_scores[student.id]["15 phút"] %}
+                <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
+                    <span>{{ score }}</span>
+                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, '15 phút', {{ score }})">
+                        Sửa
+                    </button>
+                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, '15 phút', {{ score }})">
+                        Xóa
+                    </button>
+                </div>
+                {% endfor %}
+                {% else %}
+                <span class="text-muted">Chưa có điểm</span>
+                {% endif %}
+                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, '15 phút')">Thêm</button>
+            </div>
+        </div>
+
+        <!-- Điểm 1 tiết -->
+        <div class="score-section mb-3">
+            <strong>1 tiết:</strong>
+            <div class="scores d-flex align-items-center flex-wrap">
+                {% if student_scores[student.id]["1 tiết"] %}
+                {% for score in student_scores[student.id]["1 tiết"] %}
+                <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
+                    <span>{{ score }}</span>
+                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, '1 tiết', {{ score }})">
+                        Sửa
+                    </button>
+                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, '1 tiết', {{ score }})">
+                        Xóa
+                    </button>
+                </div>
+                {% endfor %}
+                {% else %}
+                <span class="text-muted">Chưa có điểm</span>
+                {% endif %}
+                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, '1 tiết')">Thêm</button>
+            </div>
+        </div>
+
+        <!-- Điểm cuối kỳ -->
+        <div class="score-section mb-3">
+            <strong>Cuối kỳ:</strong>
+            <div class="scores d-flex align-items-center flex-wrap">
+                {% if student_scores[student.id]["cuối kỳ"] %}
+                {% for score in student_scores[student.id]["cuối kỳ"] %}
+                <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
+                    <span>{{ score }}</span>
+                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, 'cuối kỳ', {{ score }})">
+                        Sửa
+                    </button>
+                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, 'cuối kỳ', {{ score }})">
+                        Xóa
+                    </button>
+                </div>
+                {% endfor %}
+                {% else %}
+                <span class="text-muted">Chưa có điểm</span>
+                {% endif %}
+                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, 'cuối kỳ')">Thêm</button>
+            </div>
+        </div>
+
+        <!-- Hành động khác -->
+        <button class="btn btn-sm btn-primary mt-2" onclick="viewStudentDetails({{ student.id }})">Chi tiết</button>
+    </div>
+    {% endfor %}
+    {% else %}
+    <p>Vui lòng chọn lớp và môn học để hiển thị bảng điểm.</p>
+    {% endif %}
+</div>
+
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin_main.js') }}"></script>
+{% endblock %}
+{% endblock %}

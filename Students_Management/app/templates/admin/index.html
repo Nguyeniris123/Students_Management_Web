@@ -1,5 +1,11 @@
 {% extends 'admin/master.html' %}
 {% block body %}
+{% block head %}
+    {{ super() }}
+    <link rel="shortcut icon" href="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499755/images_oyg6ud.png">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style.css') }}">
+{% endblock %}
+
 {% if current_user.is_authenticated %}
 <h1 class="text-success text-center mt-1">CHÀO {{ current_user.username }} TRƯỜNG THPT PHAN CHU TRINH</h1>
 <div class="carousel-inner">

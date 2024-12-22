@@ -14,3 +14,4 @@ def auth_user(username, password, role=None):
 
 def get_user_by_id(id):
     return User.query.get(id)
+

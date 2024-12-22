@@ -117,7 +117,7 @@ class Class(db.Model):
     )
 
     def __str__(self):
-        return f"{self.name} - {self.class_room}"
+        return f"{self.name} - {self.class_room} - {self.class_grade}"
 
 
 # Bang khoi lop
