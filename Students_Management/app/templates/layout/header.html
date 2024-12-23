@@ -34,6 +34,9 @@
                 <li class="nav-item">
                     <a class="nav-link" href="/tongket">Tổng kết</a>
                 </li>
+                <li class="nav-item">
+                    <button type="button" class="btn btn-outline-dark" id="darkModeToggle">Dark Mode</button>
+                </li>
                 {% if current_user.is_authenticated %}
                 <li class="nav-item">
                     <a class="nav-link text-danger" href="/login">
@@ -53,10 +56,6 @@
                 </li>
                 {% endif %}
             </ul>
-            <!--            <form method="get" action="/" class="d-flex">-->
-            <!--                <input class="form-control me-2" type="text" name="kw" placeholder="Tìm kiếm thông tin">-->
-            <!--                <button class="btn btn-primary" type="submit">Tìm</button>-->
-            <!--            </form>-->
         </div>
     </div>
 </nav>
