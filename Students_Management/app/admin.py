@@ -173,11 +173,11 @@ class ScoreView(AuthenticatedAdminView):
                     if score.student_id == student.id:
                         score_type_name = score.score_type.name.name
                         if score_type_name == "diem15p":
-                            student_scores[student.id]["15 phút"].append(score.so_diem)
+                            student_scores[student.id]["15 phút"].append({"id": score.id, "value": score.so_diem})
                         elif score_type_name == "diem1tiet":
-                            student_scores[student.id]["1 tiết"].append(score.so_diem)
+                            student_scores[student.id]["1 tiết"].append({"id": score.id, "value": score.so_diem})
                         elif score_type_name == "diemck":
-                            student_scores[student.id]["cuối kỳ"].append(score.so_diem)
+                            student_scores[student.id]["cuối kỳ"].append({"id": score.id, "value": score.so_diem})
 
         # Truyền dữ liệu vào template
         return self.render(
@@ -228,6 +228,54 @@ class ScoreView(AuthenticatedAdminView):
             db.session.commit()
 
             return jsonify({'success': True, 'message': 'Thêm điểm thành công!'})
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'}), 500
+
+    @expose('/edit_score', methods=['POST'])
+    def edit_score(self):
+        try:
+            data = request.json
+            score_id = data.get('score_id')
+            new_value = data.get('new_value')
+            print(data)
+            if not all([score_id, new_value is not None]):
+                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'}), 400
+
+            # Tìm điểm cần sửa
+            score = Score.query.get(score_id)
+            if not score:
+                return jsonify({'success': False, 'message': 'Không tìm thấy điểm.'}), 404
+
+            # Cập nhật giá trị mới
+            score.so_diem = new_value
+            db.session.commit()
+
+            return jsonify({'success': True, 'message': 'Sửa điểm thành công!'})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'}), 500
+
+    @expose('/delete_score', methods=['POST'])
+    def delete_score(self):
+        try:
+            data = request.json
+            score_id = data.get('score_id')
+            # Kiểm tra dữ liệu đầu vào
+            if not score_id:
+                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'}), 400
+
+            # Tìm điểm cần xóa
+            score = Score.query.get(score_id)
+            if not score:
+                return jsonify({'success': False, 'message': 'Không tìm thấy điểm.'}), 404
+
+            # Xóa điểm
+            db.session.delete(score)
+            db.session.commit()
+
+            return jsonify({'success': True, 'message': 'Xóa điểm thành công!'})
 
         except Exception as e:
             db.session.rollback()

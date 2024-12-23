@@ -29,47 +29,54 @@ function addScore(studentId, scoreType) {
 }
 
 
-function editScore(studentId, scoreType, oldScore) {
-    const newScore = prompt(`Nhập điểm mới cho loại điểm: ${scoreType}`, oldScore);
-    if (newScore) {
-        // Gửi yêu cầu AJAX để sửa điểm
-        fetch(`/edit_score`, {
-            method: "POST",
+function editScore(scoreId, currentValue) {
+    const newScore = prompt('Nhập điểm mới:', currentValue);
+
+    if (newScore !== null) {
+        fetch('/admin/scoreview/edit_score', {
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ student_id: studentId, score_type: scoreType, old_score: oldScore, new_score: newScore }),
+            body: JSON.stringify({ score_id: scoreId, new_value: parseFloat(newScore) }),
         })
-        .then((response) => response.json())
-        .then((data) => {
+        .then(response => response.json())
+        .then(data => {
             if (data.success) {
-                alert("Sửa điểm thành công!");
-                location.reload();
+                alert('Sửa điểm thành công!');
+                location.reload(); // Tải lại trang
             } else {
-                alert("Có lỗi xảy ra.");
+                alert(`Lỗi: ${data.message}`);
             }
+        })
+        .catch(error => {
+            alert(`Lỗi: ${error.message}`);
         });
     }
 }
 
-function deleteScore(studentId, scoreType, score) {
-    if (confirm(`Bạn có chắc muốn xóa điểm ${score} cho loại điểm: ${scoreType}?`)) {
-        // Gửi yêu cầu AJAX để xóa điểm
-        fetch(`/delete_score`, {
-            method: "POST",
+
+function deleteScore(scoreId) {
+    if (confirm("Bạn có chắc chắn muốn xóa điểm này không?")) {
+        fetch('/admin/scoreview/delete_score', {
+            method: 'POST',
             headers: {
-                "Content-Type": "application/json",
+                'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ student_id: studentId, score_type: scoreType, score: score }),
+            body: JSON.stringify({ score_id: scoreId }),
         })
-        .then((response) => response.json())
-        .then((data) => {
+        .then(response => response.json())
+        .then(data => {
             if (data.success) {
-                alert("Xóa điểm thành công!");
-                location.reload();
+                alert(data.message);
+                location.reload(); // Tải lại trang để cập nhật danh sách điểm
             } else {
-                alert("Có lỗi xảy ra.");
+                alert("Lỗi: " + data.message);
             }
+        })
+        .catch(error => {
+            console.error("Lỗi khi xóa điểm:", error);
+            alert("Đã xảy ra lỗi khi xóa điểm.");
         });
     }
 }

@@ -55,11 +55,11 @@
                 {% if student_scores[student.id]["15 phút"] %}
                 {% for score in student_scores[student.id]["15 phút"] %}
                 <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
-                    <span>{{ score }}</span>
-                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, 'diem15p', {{ score }})">
+                    <span>{{ score.value }}</span>
+                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ score.id }}, {{ score.value }})">
                         Sửa
                     </button>
-                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, 'diem15p', {{ score }})">
+                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ score.id }})">
                         Xóa
                     </button>
                 </div>
@@ -78,11 +78,11 @@
                 {% if student_scores[student.id]["1 tiết"] %}
                 {% for score in student_scores[student.id]["1 tiết"] %}
                 <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
-                    <span>{{ score }}</span>
-                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, 'diem1tiet', {{ score }})">
+                    <span>{{ score.value }}</span>
+                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ score.id }}, {{ score.value }})">
                         Sửa
                     </button>
-                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, 'diem1tiet', {{ score }})">
+                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ score.id }})">
                         Xóa
                     </button>
                 </div>
@@ -101,11 +101,11 @@
                 {% if student_scores[student.id]["cuối kỳ"] %}
                 {% for score in student_scores[student.id]["cuối kỳ"] %}
                 <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
-                    <span>{{ score }}</span>
-                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, 'diemck', {{ score }})">
+                    <span>{{ score.value }}</span>
+                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ score.id }}, {{ score.value }})">
                         Sửa
                     </button>
-                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, 'diemck', {{ score }})">
+                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ score.id }})">
                         Xóa
                     </button>
                 </div>
