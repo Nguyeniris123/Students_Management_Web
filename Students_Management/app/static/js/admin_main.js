@@ -1,40 +1,33 @@
-//function addScore(studentId, scoreType) {
-//    // Gửi yêu cầu đến server để thêm điểm
-//    alert(`Thêm điểm cho học sinh ${studentId}, loại điểm: ${scoreType}`);
-//}
-//
-//function editScore(scoreId) {
-//    // Gửi yêu cầu đến server để sửa điểm
-//    alert(`Sửa điểm có ID: ${scoreId}`);
-//}
-//
-//function deleteScore(scoreId) {
-//    // Gửi yêu cầu đến server để xóa điểm
-//    alert(`Xóa điểm có ID: ${scoreId}`);
-//}
-
 function addScore(studentId, scoreType) {
-    const newScore = prompt(`Nhập điểm mới cho loại điểm: ${scoreType}`);
-    if (newScore) {
-        // Gửi yêu cầu AJAX để thêm điểm
-        fetch(`/add_score`, {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ student_id: studentId, score_type: scoreType, score: newScore }),
-        })
-        .then((response) => response.json())
-        .then((data) => {
-            if (data.success) {
-                alert("Thêm điểm thành công!");
-                location.reload();
-            } else {
-                alert("Có lỗi xảy ra.");
-            }
-        });
+    const scoreValue = prompt("Nhập điểm cần thêm:");
+    if (!scoreValue) {
+        alert("Bạn chưa nhập điểm.");
+        return;
     }
+
+    fetch('/admin/scoreview/add_score', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            student_id: studentId,
+            subject_id: document.getElementById("subject").value,
+            score_type: scoreType,
+            score_value: parseFloat(scoreValue)
+        })
+    })
+    .then(response => response.json())
+    .then(data => {
+        alert(data.message);
+        if (data.success) {
+            location.reload();
+        }
+    })
+    .catch(error => {
+        console.error('Lỗi:', error);
+        alert('Không thể thêm điểm. Vui lòng thử lại.');
+    });
 }
+
 
 function editScore(studentId, scoreType, oldScore) {
     const newScore = prompt(`Nhập điểm mới cho loại điểm: ${scoreType}`, oldScore);

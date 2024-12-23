@@ -3,52 +3,6 @@ import dao
 from app import app, login, db
 from flask_login import login_user, logout_user
 from app.dao import get_user_by_id
-from app.models import UserRole, Student, Class, Score, ScoreType
-
-
-@app.route('/add_score', methods=['POST'])
-def add_score():
-    data = request.json
-    student_id = data['student_id']
-    score_type = data['score_type']
-    score = float(data['score'])
-
-    score_type_obj = ScoreType.query.filter_by(name=score_type).first()
-    new_score = Score(student_id=student_id, score_type_id=score_type_obj.id, so_diem=score)
-    db.session.add(new_score)
-    db.session.commit()
-    return jsonify({"success": True})
-
-@app.route('/edit_score', methods=['POST'])
-def edit_score():
-    data = request.json
-    student_id = data['student_id']
-    score_type = data['score_type']
-    old_score = float(data['old_score'])
-    new_score = float(data['new_score'])
-
-    score_type_obj = ScoreType.query.filter_by(name=score_type).first()
-    score_obj = Score.query.filter_by(student_id=student_id, score_type_id=score_type_obj.id, so_diem=old_score).first()
-    if score_obj:
-        score_obj.so_diem = new_score
-        db.session.commit()
-        return jsonify({"success": True})
-    return jsonify({"success": False})
-
-@app.route('/delete_score', methods=['POST'])
-def delete_score():
-    data = request.json
-    student_id = data['student_id']
-    score_type = data['score_type']
-    score = float(data['score'])
-
-    score_type_obj = ScoreType.query.filter_by(name=score_type).first()
-    score_obj = Score.query.filter_by(student_id=student_id, score_type_id=score_type_obj.id, so_diem=score).first()
-    if score_obj:
-        db.session.delete(score_obj)
-        db.session.commit()
-        return jsonify({"success": True})
-    return jsonify({"success": False})
 
 
 @app.route("/")

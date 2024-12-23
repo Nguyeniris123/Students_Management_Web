@@ -17,7 +17,7 @@
                 {% for cls in classes %}
                 <option value="{{ cls.id }}"
                         {% if cls.id == request.args.get('class')|int %} selected {% endif %}>
-                    {{ cls.name }}
+                    {{ cls }}
                 </option>
                 {% endfor %}
             </select>
@@ -30,7 +30,7 @@
                 {% for subj in subjects %}
                 <option value="{{ subj.id }}"
                         {% if subj.id == request.args.get('subject')|int %} selected {% endif %}>
-                    {{ subj.name }}
+                    {{ subj }}
                 </option>
                 {% endfor %}
             </select>
@@ -56,10 +56,10 @@
                 {% for score in student_scores[student.id]["15 phút"] %}
                 <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
                     <span>{{ score }}</span>
-                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, '15 phút', {{ score }})">
+                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, 'diem15p', {{ score }})">
                         Sửa
                     </button>
-                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, '15 phút', {{ score }})">
+                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, 'diem15p', {{ score }})">
                         Xóa
                     </button>
                 </div>
@@ -67,7 +67,7 @@
                 {% else %}
                 <span class="text-muted">Chưa có điểm</span>
                 {% endif %}
-                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, '15 phút')">Thêm</button>
+                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, 'diem15p')">Thêm</button>
             </div>
         </div>
 
@@ -79,10 +79,10 @@
                 {% for score in student_scores[student.id]["1 tiết"] %}
                 <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
                     <span>{{ score }}</span>
-                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, '1 tiết', {{ score }})">
+                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, 'diem1tiet', {{ score }})">
                         Sửa
                     </button>
-                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, '1 tiết', {{ score }})">
+                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, 'diem1tiet', {{ score }})">
                         Xóa
                     </button>
                 </div>
@@ -90,7 +90,7 @@
                 {% else %}
                 <span class="text-muted">Chưa có điểm</span>
                 {% endif %}
-                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, '1 tiết')">Thêm</button>
+                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, 'diem1tiet')">Thêm</button>
             </div>
         </div>
 
@@ -102,10 +102,10 @@
                 {% for score in student_scores[student.id]["cuối kỳ"] %}
                 <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
                     <span>{{ score }}</span>
-                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, 'cuối kỳ', {{ score }})">
+                    <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ student.id }}, 'diemck', {{ score }})">
                         Sửa
                     </button>
-                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, 'cuối kỳ', {{ score }})">
+                    <button class="btn btn-sm btn-danger mx-1" onclick="deleteScore({{ student.id }}, 'diemck', {{ score }})">
                         Xóa
                     </button>
                 </div>
@@ -113,12 +113,9 @@
                 {% else %}
                 <span class="text-muted">Chưa có điểm</span>
                 {% endif %}
-                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, 'cuối kỳ')">Thêm</button>
+                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, 'diemck')">Thêm</button>
             </div>
         </div>
-
-        <!-- Hành động khác -->
-        <button class="btn btn-sm btn-primary mt-2" onclick="viewStudentDetails({{ student.id }})">Chi tiết</button>
     </div>
     {% endfor %}
     {% else %}

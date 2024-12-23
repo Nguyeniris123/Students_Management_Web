@@ -1,11 +1,11 @@
 from datetime import date
 from app.models import (Class, Student, User, UserRole, Semester, Subject,
-                        Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge, Schedule)
+                        Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge, Schedule, LoaiDiem)
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from app import app, db
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, logout_user
-from flask import redirect, request
+from flask import redirect, request, jsonify
 from sqlalchemy.exc import IntegrityError
 from flask import flash
 
@@ -62,8 +62,7 @@ class GiaoVienAdminView(ModelView):
 
 
 class StudentView(NhanVienAdminView):
-    column_list = ['id', 'name', 'username', 'sex', 'birth', 'regulation_age', 'address', 'phone', 'email', 'class_',
-                   'user_role', 'scores']
+    column_list = ['id', 'name', 'username', 'sex', 'birth', 'regulation_age', 'address', 'phone', 'email', 'user_role']
     form_columns = ['name', 'username', 'sex', 'birth', 'address', 'phone', 'email']
     column_searchable_list = ['id', 'name']
     column_editable_list = ['name', 'sex', 'birth', 'address', 'phone', 'email']
@@ -188,6 +187,51 @@ class ScoreView(AuthenticatedAdminView):
             students=students,
             student_scores=student_scores,
         )
+
+    @expose('/add_score', methods=['POST'])
+    def add_score(self):
+        try:
+            data = request.json
+            student_id = data.get('student_id')
+            subject_id = data.get('subject_id')
+            score_type_name = data.get('score_type')  # '15 phút', '1 tiết', 'cuối kỳ'
+            score_value = data.get('score_value')
+
+            # Kiểm tra dữ liệu đầu vào
+            if not all([student_id, subject_id, score_type_name, score_value]):
+                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'}), 400
+
+            # Chuyển đổi loại điểm từ chuỗi sang enum
+            if score_type_name == 'diem15p':
+                score_type_enum = LoaiDiem.diem15p
+            elif score_type_name == 'diem1tiet':
+                score_type_enum = LoaiDiem.diem1tiet
+            elif score_type_name == 'diemck':  # Điều kiện đúng cho 'diemck'
+                score_type_enum = LoaiDiem.diemck
+            else:
+                raise ValueError(f"Loại điểm không hợp lệ: {score_type_name}")
+
+            # Lấy loại điểm từ bảng ScoreType
+            score_type = ScoreType.query.filter_by(name=score_type_enum).first()
+            if not score_type:
+                return jsonify({'success': False, 'message': 'Không tìm thấy loại điểm tương ứng.'}), 404
+
+            # Tạo điểm mới
+            new_score = Score(
+                student_id=student_id,
+                subject_id=subject_id,
+                score_type_id=score_type.id,
+                so_diem=score_value
+            )
+
+            db.session.add(new_score)
+            db.session.commit()
+
+            return jsonify({'success': True, 'message': 'Thêm điểm thành công!'})
+
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'}), 500
 
 
 # Thêm các bảng vào Flask-Admin

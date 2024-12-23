@@ -73,11 +73,11 @@ class User(db.Model, UserMixin):
 
 
 class Admin(User):
-    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Tham chiếu đến User
+    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, autoincrement=True)  # Tham chiếu đến User
 
 
 class Student(User):
-    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Tham chiếu đến User
+    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, autoincrement=True)  # Tham chiếu đến User
     # num_instances = 0
     class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False, default=1)
     regulation_age_id = db.Column(db.Integer, db.ForeignKey('regulation_age.id'), nullable=False, default=2)
@@ -89,7 +89,7 @@ class Student(User):
 
 # Lớp Teacher
 class Teacher(User):
-    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Khóa chính tham chiếu từ User
+    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, autoincrement=True)  # Khóa chính tham chiếu từ User
     department = db.Column(db.String(100), nullable=True)  # Khoa/Bộ môn của giáo viên
     schedules = relationship('Schedule', backref='teacher', lazy=True, cascade="all, delete-orphan")
     def __str__(self):
@@ -98,7 +98,7 @@ class Teacher(User):
 
 # Lớp Staff
 class Staff(User):
-    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True)  # Khóa chính tham chiếu từ User
+    id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, autoincrement=True)  # Khóa chính tham chiếu từ User
     position = db.Column(db.String(100), nullable=True, default='Nhân viên hành chính')  # Vị trí làm việc
 
 
@@ -194,16 +194,11 @@ class ScoreType(db.Model):
 
 # Bảng điểm
 class Score(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     so_diem = db.Column(db.Float, nullable=False)
-    attempt = db.Column(db.Integer, default=1, nullable=False)
     student_id = db.Column(db.Integer, ForeignKey('student.id'), nullable=False)
     subject_id = db.Column(db.Integer, ForeignKey('subject.id'), nullable=False)
     score_type_id = Column(db.Integer, db.ForeignKey('score_type.id'), nullable=False)
-    __table_args__ = (
-        db.UniqueConstraint('student_id', 'subject_id', 'score_type_id', 'attempt',
-                            name='unique_score_per_attempt'),
-    )
 
     def __str__(self):
         return f"{self.so_diem} - {self.score_type.name} - {self.subject}"
@@ -217,7 +212,7 @@ class Regulation(db.Model):
 
 # Bảng quy định Số tuổi tối đa
 class RegulationAge(Regulation):
-    id = db.Column(db.Integer, db.ForeignKey('regulation.id'), primary_key=True)
+    id = db.Column(db.Integer, db.ForeignKey('regulation.id'), primary_key=True, autoincrement=True)
     min_age = db.Column(db.Integer, nullable=False, default = 15)
     max_age = db.Column(db.Integer, nullable=False, default= 20)
     students = db.relationship('Student', backref='regulation_age', lazy=True)
@@ -226,7 +221,7 @@ class RegulationAge(Regulation):
         return f"{self.name} - {self.min_age} - {self.max_age}"
 
 class RegulationMaxStudent(Regulation):
-    id = db.Column(db.Integer, db.ForeignKey('regulation.id'), primary_key=True)
+    id = db.Column(db.Integer, db.ForeignKey('regulation.id'), primary_key=True, autoincrement=True)
     max_students = db.Column(db.Integer, nullable=False, default=40)
     classes = db.relationship('Class', backref='regulation_max_student', lazy=True)
 
@@ -235,7 +230,7 @@ class RegulationMaxStudent(Regulation):
 
 
 class ClassRoom(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
     classes = relationship('Class', backref='class_room', lazy=True)
 
@@ -243,7 +238,7 @@ class ClassRoom(db.Model):
         return f"{self.name}"
 
 class Schedule(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     date_work = db.Column(db.Date, nullable=True, default=date(2024, 12, 4))
     teaching_session = db.Column(db.Enum(BuoiDay), default=BuoiDay.sang)
     class_period = db.Column(db.Enum(TietHoc), default=TietHoc.tiet1)
