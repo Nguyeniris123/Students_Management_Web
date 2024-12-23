@@ -147,6 +147,9 @@ class ScoreView(AuthenticatedAdminView):
         classes = Class.query.order_by(Class.name).all()
         subjects = Subject.query.order_by(Subject.name).all()
 
+        # Lấy từ khóa tìm kiếm
+        keyword = request.args.get('kw', '').strip()
+
         # Khởi tạo dữ liệu rỗng
         students = []
         student_scores = {}
@@ -157,7 +160,10 @@ class ScoreView(AuthenticatedAdminView):
 
         if class_id and subject_id:
             # Lấy danh sách học sinh trong lớp
-            students = Student.query.filter_by(class_id=class_id).order_by(Student.name).all()
+            query = Student.query.filter_by(class_id=class_id)
+            if keyword:
+                query = query.filter(Student.name.like(f'%{keyword}%'))
+            students = query.order_by(Student.name).all()
 
             # Lấy điểm của học sinh cho môn học được chọn
             scores = Score.query.filter_by(subject_id=subject_id).all()
@@ -186,6 +192,7 @@ class ScoreView(AuthenticatedAdminView):
             subjects=subjects,
             students=students,
             student_scores=student_scores,
+            keyword=keyword
         )
 
     @expose('/add_score', methods=['POST'])
@@ -295,5 +302,5 @@ admin.add_view(RegulationMaxStudentView(RegulationMaxStudent, db.session))
 admin.add_view(RegulationAgeView(RegulationAge, db.session))
 admin.add_view(ScheduleView(Schedule, db.session))
 admin.add_view(ScoreView(name='Score'))
-admin.add_view(StatsView(name='Thống kê'))
-admin.add_view(LogoutView(name='Đăng xuất'))
+admin.add_view(StatsView(name='Stat'))
+admin.add_view(LogoutView(name='Logout'))

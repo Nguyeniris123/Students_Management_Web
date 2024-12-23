@@ -48,47 +48,6 @@ def logout_process():
     logout_user()
     return redirect('/login')
 
-
-@app.route("/register")
-def register_process():
-    return render_template('register.html')
-
-
-@app.route("/tiepnhanhocsinh")
-def tiepnhanhocsinh_process():
-    return render_template('tiepnhanhocsinh.html')
-
-
-@app.route("/dieuchinhlop")
-def dieuchinhlop_process():
-    return render_template('dieuchinhlop.html')
-
-
-@app.route("/tracuuhocsinh")
-def tracuuhocsinh_process():
-    return render_template('tracuuhocsinh.html')
-
-
-@app.route("/quanlymonhoc")
-def qlmonhoc_process():
-    return render_template('quanlymonhoc.html')
-
-
-@app.route("/quanlydiem")
-def qldiem_process():
-    return render_template('quanlydiem.html')
-
-
-@app.route("/quydinh")
-def quydinh_process():
-    return render_template('quydinh.html')
-
-
-@app.route("/tongket")
-def tongket_process():
-    return render_template('tongket.html')
-
-
 if __name__ == '__main__':
     from app import admin  # chạy trang admin flask
 

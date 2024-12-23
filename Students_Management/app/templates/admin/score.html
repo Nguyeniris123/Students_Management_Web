@@ -11,32 +11,43 @@
 <form method="get" action="{{ url_for('scoreview.index') }}">
     <div class="row">
         <!-- Dropdown chọn lớp -->
-        <div class="col-6">
+        <div class="col-md-6 col-12">
             <label for="class">Lớp</label>
             <select class="form-control" id="class" name="class">
                 {% for cls in classes %}
                 <option value="{{ cls.id }}"
-                        {% if cls.id == request.args.get('class')|int %} selected {% endif %}>
-                    {{ cls }}
+                        {% if cls.id== request.args.get('class')|int %} selected {% endif %}>
+                {{ cls }}
                 </option>
                 {% endfor %}
             </select>
         </div>
 
         <!-- Dropdown chọn môn học -->
-        <div class="col-6">
+        <div class="col-md-6 col-12">
             <label for="subject">Môn học</label>
             <select class="form-control" id="subject" name="subject">
                 {% for subj in subjects %}
                 <option value="{{ subj.id }}"
-                        {% if subj.id == request.args.get('subject')|int %} selected {% endif %}>
-                    {{ subj }}
+                        {% if subj.id== request.args.get('subject')|int %} selected {% endif %}>
+                {{ subj }}
                 </option>
                 {% endfor %}
             </select>
         </div>
     </div>
-    <button class="btn btn-primary mt-3" type="submit">Hiển thị</button>
+    <div class="row">
+        <div class="col-md-6 col-12 d-flex">
+            <form method="get" action="/" class="d-flex w-100">
+                <input class="form-control me-2 mt-3" type="text" name="kw" placeholder="Nhập tên học sinh để tìm kiếm"
+                       value="{{ request.args.get('kw', '') }}">
+            </form>
+        </div>
+        <div class="col-md-6 col-12 d-flex">
+            <button class="btn btn-primary mt-3" type="submit">Tìm kiếm học sinh</button>
+        </div>
+    </div>
+
 </form>
 
 
@@ -67,7 +78,8 @@
                 {% else %}
                 <span class="text-muted">Chưa có điểm</span>
                 {% endif %}
-                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, 'diem15p')">Thêm</button>
+                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, 'diem15p')">Thêm
+                </button>
             </div>
         </div>
 
@@ -90,7 +102,8 @@
                 {% else %}
                 <span class="text-muted">Chưa có điểm</span>
                 {% endif %}
-                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, 'diem1tiet')">Thêm</button>
+                <button class="btn btn-sm btn-success mx-2" onclick="addScore({{ student.id }}, 'diem1tiet')">Thêm
+                </button>
             </div>
         </div>
 
@@ -119,7 +132,7 @@
     </div>
     {% endfor %}
     {% else %}
-    <p>Vui lòng chọn lớp và môn học để hiển thị bảng điểm.</p>
+    <p>Không có thông tin, thử lại đi</p>
     {% endif %}
 </div>
 
