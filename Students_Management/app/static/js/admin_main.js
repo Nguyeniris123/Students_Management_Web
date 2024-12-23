@@ -1,9 +1,5 @@
 function addScore(studentId, scoreType) {
     const scoreValue = prompt("Nhập điểm cần thêm:");
-    if (!scoreValue) {
-        alert("Bạn chưa nhập điểm.");
-        return;
-    }
 
     fetch('/admin/scoreview/add_score', {
         method: 'POST',
@@ -43,14 +39,13 @@ function editScore(scoreId, currentValue) {
         .then(response => response.json())
         .then(data => {
             if (data.success) {
-                alert('Sửa điểm thành công!');
+                alert(data.message);
                 location.reload(); // Tải lại trang
-            } else {
-                alert(`Lỗi: ${data.message}`);
             }
         })
         .catch(error => {
-            alert(`Lỗi: ${error.message}`);
+            console.error('Lỗi:', error);
+            alert('Không thể sửa điểm. Vui lòng thử lại.');
         });
     }
 }
@@ -70,8 +65,6 @@ function deleteScore(scoreId) {
             if (data.success) {
                 alert(data.message);
                 location.reload(); // Tải lại trang để cập nhật danh sách điểm
-            } else {
-                alert("Lỗi: " + data.message);
             }
         })
         .catch(error => {

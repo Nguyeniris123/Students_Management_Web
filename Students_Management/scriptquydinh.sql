@@ -65,7 +65,7 @@ BEGIN
       AND subject_id = NEW.subject_id
       AND score_type_id = (SELECT id FROM score_type WHERE name = 'diem15p');
 
-    IF NEW.score_type_id = (SELECT id FROM score_type WHERE name = 'diem15p') AND count_15p >= 5 THEN
+    IF NEW.score_type_id = (SELECT id FROM score_type WHERE name = 'diem15p') AND count_15p > 5 THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Mỗi học sinh chỉ được tối đa 5 cột điểm 15 phút.';
     END IF;
@@ -77,7 +77,7 @@ BEGIN
       AND subject_id = NEW.subject_id
       AND score_type_id = (SELECT id FROM score_type WHERE name = 'diem1tiet');
 
-    IF NEW.score_type_id = (SELECT id FROM score_type WHERE name = 'diem1tiet') AND count_1tiet >= 3 THEN
+    IF NEW.score_type_id = (SELECT id FROM score_type WHERE name = 'diem1tiet') AND count_1tiet > 3 THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Mỗi học sinh chỉ được tối đa 3 bài kiểm tra 1 tiết.';
     END IF;
@@ -90,7 +90,7 @@ BEGIN
       AND score_type_id = (SELECT id FROM score_type WHERE name = 'diemck');
 
     -- Nếu loại điểm cũ không phải là diemck và loại điểm mới là diemck
-    IF NEW.score_type_id = (SELECT id FROM score_type WHERE name = 'diemck') AND count_cuoi_ky >= 1 THEN
+    IF NEW.score_type_id = (SELECT id FROM score_type WHERE name = 'diemck') AND count_cuoi_ky > 1 THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Mỗi học sinh chỉ có 1 điểm thi cuối kỳ duy nhất.';
     END IF;
@@ -149,13 +149,40 @@ BEGIN
         SET MESSAGE_TEXT = 'Năm của học kỳ và năm của khối lớp không trùng nhau.';
     END IF;
 END$$
-
 DELIMITER ;
+
+-- DELIMITER $$
+-- CREATE TRIGGER check_student_age
+-- BEFORE INSERT ON student
+-- FOR EACH ROW
+-- BEGIN
+--     DECLARE student_age INT;
+--     DECLARE min_age INT;
+--     DECLARE max_age INT;
+
+--     -- Tính tuổi của học sinh
+--     SET student_age = TIMESTAMPDIFF(YEAR, NEW.birth, CURDATE());
+
+--     -- Lấy giới hạn tuổi từ RegulationAge
+--     SELECT min_age, max_age
+--     INTO min_age, max_age
+--     FROM regulation_age
+--     WHERE id = NEW.regulation_age_id;
+
+--     -- Kiểm tra tuổi
+--     IF student_age < min_age OR student_age > max_age THEN
+--         SIGNAL SQLSTATE '45000'
+--         SET MESSAGE_TEXT = 'Tuổi học sinh không hợp lệ. Tuổi phải nằm trong khoảng quy định.';
+--     END IF;
+-- END$$
+-- DELIMITER ;
+
+
 
 -- DROP TRIGGER IF EXISTS trg_check_scores_insert;
 -- DROP TRIGGER IF EXISTS trg_check_scores_update;
 -- DROP TRIGGER IF EXISTS trg_validate_subject_year_insert;
 -- DROP TRIGGER IF EXISTS trg_validate_subject_year_update;
-
+-- DROP TRIGGER IF EXISTS check_student_age;
 
 

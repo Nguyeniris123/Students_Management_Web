@@ -1,5 +1,5 @@
 from email.policy import default
-from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Enum
+from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Enum, func
 from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, validates
 from app import db, app
@@ -254,121 +254,128 @@ class Schedule(db.Model):
                             'class_id', 'semester_id', name='unique_schedule'),
     )
 
+# Lay ra nhung hoc sinh hoc mon hoc
+def get_all_students_average_score(subject_id):
+    return db.session.query(Score.student_id,Score.subject_id,(func.sum(Score.so_diem * ScoreType.he_so)/func.sum(ScoreType.he_so)).label('Diem Trung Binh'))\
+        .filter(Score.subject_id.__eq__(subject_id)).join(ScoreType,ScoreType.id.__eq__(Score.score_type_id)).group_by(Score.student_id).all()
+
 
 if __name__ == '__main__':
     with app.app_context():
-        db.create_all()
+        # db.create_all()
 
-        admin1 = Admin(name='admin',
-                       username='admin',
-                       password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
-                       user_role=UserRole.ADMIN)
-        db.session.add(admin1)
+        print(get_all_students_average_score(3))
 
-        teacher1 = Teacher(
-            name="Nguyen Thi B",
-            username="teacher1",
-            password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
-            user_role=UserRole.GIAOVIEN,
-            sex=Gender.FEMALE,
-            birth=date(1998, 6, 20),
-            address="12 Nguyen Trai, HCMC",
-            phone="0908123456",
-            email="lan@example.com",
-            avatar="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg",
-        )
-        db.session.add(teacher1)
+        # admin1 = Admin(name='admin',
+        #                username='admin',
+        #                password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
+        #                user_role=UserRole.ADMIN)
+        # db.session.add(admin1)
+        #
+        # teacher1 = Teacher(
+        #     name="Nguyen Thi B",
+        #     username="teacher1",
+        #     password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
+        #     user_role=UserRole.GIAOVIEN,
+        #     sex=Gender.FEMALE,
+        #     birth=date(1998, 6, 20),
+        #     address="12 Nguyen Trai, HCMC",
+        #     phone="0908123456",
+        #     email="lan@example.com",
+        #     avatar="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg",
+        # )
+        # db.session.add(teacher1)
+        #
+        # teacher2 = Teacher(
+        #     name="Nhật Minh",
+        #     username="teacher2",
+        #     password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
+        #     user_role=UserRole.GIAOVIEN,
+        #     sex=Gender.FEMALE,
+        #     birth=date(1998, 6, 20),
+        #     address="12 Nguyen Trai, HCMC",
+        #     phone="0908123456",
+        #     email="lan@example.com",
+        #     avatar="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg",
+        # )
+        # db.session.add(teacher2)
+        #
+        # nhanvien1 = Staff(name='Nguyễn Văn A',
+        #                   username='staff1',
+        #                   password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
+        #                   user_role=UserRole.NHANVIEN)
+        # db.session.add(nhanvien1)
+        #
+        # nhanvien2 = Staff(name='Bùi Quyền',
+        #                   username='staff2',
+        #                   password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
+        #                   user_role=UserRole.NHANVIEN)
+        # db.session.add(nhanvien2)
+        #
+        # nam1 = Year()
+        # db.session.add(nam1)
+        #
+        # classgrade1 = ClassGrade(name=KhoiLop.Khoi10, year=nam1)
+        # classgrade2 = ClassGrade(name=KhoiLop.Khoi11, year=nam1)
+        # classgrade3 = ClassGrade(name=KhoiLop.Khoi12, year=nam1)
+        # db.session.add(classgrade1)
+        # db.session.add(classgrade2)
+        # db.session.add(classgrade3)
+        #
+        # quydinh1 = RegulationAge (name='Độ tuổi')
+        # quydinh2 = RegulationMaxStudent(name='Sĩ số')
+        #
+        # phonghoc1 = ClassRoom(name='D101')
+        #
+        # class1 = Class(name='10A1', class_grade=classgrade1, regulation_max_student=quydinh2, class_room=phonghoc1)
+        # db.session.add(class1)
+        #
+        # # Tạo một đối tượng Student
+        # student1 = Student(
+        #     name="Nguyen Thi Lan",
+        #     username="student1",
+        #     password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
+        #     user_role=UserRole.USER,
+        #     sex=Gender.FEMALE,
+        #     birth=date(2005, 6, 20),
+        #     address="12 Nguyen Trai, HCMC",
+        #     phone="0908123456",
+        #     email="lan@example.com",
+        #     avatar="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg",
+        #     class_ = class1,  # Tham chiếu đến lớp
+        #     regulation_age = quydinh1,
+        # )
+        # db.session.add(student1)
+        #
+        # hocky1 = Semester(year=nam1)  # mặc định là học kì 1
+        # db.session.add(hocky1)
+        # hocky2 = Semester(name=HocKy.HK2, year=nam1)
+        # db.session.add(hocky2)
+        #
+        # lichday1 = Schedule(teacher=teacher1, semester=hocky1, class_=class1)
+        # db.session.add(lichday1)
+        #
+        # diem_15p1 = ScoreType(name=LoaiDiem.diem15p, he_so=HeSo.heso1)
+        # diem_1tiet1 = ScoreType(name=LoaiDiem.diem1tiet, he_so=HeSo.heso2)
+        # diem_ck1= ScoreType(name=LoaiDiem.diemck, he_so=HeSo.heso3)
+        # db.session.add(diem_15p1)
+        # db.session.add(diem_1tiet1)
+        # db.session.add(diem_ck1)
+        #
+        # toan10 = Subject(name="Toan10", semester=hocky1, class_grade=classgrade1)
+        # van10 = Subject(name='Van10', semester=hocky1, class_grade=classgrade1)
+        # anh10 = Subject(name='Anh10', semester=hocky1, class_grade=classgrade1)
+        # db.session.add(toan10)
+        # db.session.add(van10)
+        # db.session.add(anh10)
+        #
+        # diem_toan_15p_hs1_hk1 = Score(so_diem=7, student=student1, subject=toan10, score_type=diem_15p1)
+        # diem_toan_1tiet_hs1_hk1 = Score(so_diem=10, student=student1, subject=toan10, score_type=diem_1tiet1)
+        # diem_toan_ck_hs1_hk1 = Score(so_diem=5, student=student1, subject=toan10, score_type=diem_ck1)
+        #
+        #
+        # db.session.add(diem_toan_15p_hs1_hk1)
+        # db.session.add(diem_toan_1tiet_hs1_hk1)
+        # db.session.add(diem_toan_ck_hs1_hk1)
 
-        teacher2 = Teacher(
-            name="Nhật Minh",
-            username="teacher2",
-            password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
-            user_role=UserRole.GIAOVIEN,
-            sex=Gender.FEMALE,
-            birth=date(1998, 6, 20),
-            address="12 Nguyen Trai, HCMC",
-            phone="0908123456",
-            email="lan@example.com",
-            avatar="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg",
-        )
-        db.session.add(teacher2)
-
-        nhanvien1 = Staff(name='Nguyễn Văn A',
-                          username='staff1',
-                          password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
-                          user_role=UserRole.NHANVIEN)
-        db.session.add(nhanvien1)
-
-        nhanvien2 = Staff(name='Bùi Quyền',
-                          username='staff2',
-                          password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
-                          user_role=UserRole.NHANVIEN)
-        db.session.add(nhanvien2)
-
-        nam1 = Year()
-        db.session.add(nam1)
-
-        classgrade1 = ClassGrade(name=KhoiLop.Khoi10, year=nam1)
-        classgrade2 = ClassGrade(name=KhoiLop.Khoi11, year=nam1)
-        classgrade3 = ClassGrade(name=KhoiLop.Khoi12, year=nam1)
-        db.session.add(classgrade1)
-        db.session.add(classgrade2)
-        db.session.add(classgrade3)
-
-        quydinh1 = RegulationAge (name='Độ tuổi')
-        quydinh2 = RegulationMaxStudent(name='Sĩ số')
-
-        phonghoc1 = ClassRoom(name='D101')
-
-        class1 = Class(name='10A1', class_grade=classgrade1, regulation_max_student=quydinh2, class_room=phonghoc1)
-        db.session.add(class1)
-
-        # Tạo một đối tượng Student
-        student1 = Student(
-            name="Nguyen Thi Lan",
-            username="student1",
-            password=str(hashlib.md5('1'.encode('utf-8')).hexdigest()),
-            user_role=UserRole.USER,
-            sex=Gender.FEMALE,
-            birth=date(2005, 6, 20),
-            address="12 Nguyen Trai, HCMC",
-            phone="0908123456",
-            email="lan@example.com",
-            avatar="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg",
-            class_ = class1,  # Tham chiếu đến lớp
-            regulation_age = quydinh1,
-        )
-        db.session.add(student1)
-
-        hocky1 = Semester(year=nam1)  # mặc định là học kì 1
-        db.session.add(hocky1)
-        hocky2 = Semester(name=HocKy.HK2, year=nam1)
-        db.session.add(hocky2)
-
-        lichday1 = Schedule(teacher=teacher1, semester=hocky1, class_=class1)
-        db.session.add(lichday1)
-
-        diem_15p1 = ScoreType(name=LoaiDiem.diem15p, he_so=HeSo.heso1)
-        diem_1tiet1 = ScoreType(name=LoaiDiem.diem1tiet, he_so=HeSo.heso2)
-        diem_ck1= ScoreType(name=LoaiDiem.diemck, he_so=HeSo.heso3)
-        db.session.add(diem_15p1)
-        db.session.add(diem_1tiet1)
-        db.session.add(diem_ck1)
-
-        toan10 = Subject(name="Toan10", semester=hocky1, class_grade=classgrade1)
-        van10 = Subject(name='Van10', semester=hocky1, class_grade=classgrade1)
-        anh10 = Subject(name='Anh10', semester=hocky1, class_grade=classgrade1)
-        db.session.add(toan10)
-        db.session.add(van10)
-        db.session.add(anh10)
-
-        diem_toan_15p_hs1_hk1 = Score(so_diem=7, student=student1, subject=toan10, score_type=diem_15p1)
-        diem_toan_1tiet_hs1_hk1 = Score(so_diem=10, student=student1, subject=toan10, score_type=diem_1tiet1)
-        diem_toan_ck_hs1_hk1 = Score(so_diem=5, student=student1, subject=toan10, score_type=diem_ck1)
-
-
-        db.session.add(diem_toan_15p_hs1_hk1)
-        db.session.add(diem_toan_1tiet_hs1_hk1)
-        db.session.add(diem_toan_ck_hs1_hk1)
-
-        db.session.commit()
+        # db.session.commit()

@@ -29,6 +29,12 @@ class AuthenticatedAdminView(BaseView):
         return current_user.is_authenticated and current_user.user_role == UserRole.ADMIN
 
 
+class AuthenticatedTeacherView(BaseView):
+    def is_accessible(self):
+        return current_user.is_authenticated and (
+                current_user.user_role == UserRole.ADMIN or current_user.user_role == UserRole.GIAOVIEN)
+
+
 class AdminView(ModelView):
     def is_accessible(self):
         # Chỉ admin mới có quyền truy cập
@@ -140,7 +146,7 @@ class StatsView(AuthenticatedAdminView):
         return self.render('admin/stats.html')
 
 
-class ScoreView(AuthenticatedAdminView):
+class ScoreView(AuthenticatedTeacherView):
     @expose('/', methods=['GET', 'POST'])
     def index(self):
         # Lấy danh sách lớp và môn học
@@ -246,7 +252,6 @@ class ScoreView(AuthenticatedAdminView):
             data = request.json
             score_id = data.get('score_id')
             new_value = data.get('new_value')
-            print(data)
             if not all([score_id, new_value is not None]):
                 return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'}), 400
 
@@ -283,7 +288,6 @@ class ScoreView(AuthenticatedAdminView):
             db.session.commit()
 
             return jsonify({'success': True, 'message': 'Xóa điểm thành công!'})
-
         except Exception as e:
             db.session.rollback()
             return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'}), 500
