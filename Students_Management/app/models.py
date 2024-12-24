@@ -244,25 +244,15 @@ class Schedule(db.Model):
     teacher_id = Column(db.Integer, db.ForeignKey('teacher.id'), nullable=False)
     semester_id = Column(db.Integer, db.ForeignKey('semester.id'), nullable=False)
 
-    # def __str__(self):
-    #     return f"{self.name} - {self.min_age} - {self.max_age}"
-
     __table_args__ = (
         db.UniqueConstraint('date_work','teaching_session','class_period',
                             'class_id', 'semester_id', name='unique_schedule'),
     )
 
-# Lay ra nhung hoc sinh hoc mon hoc
-def get_all_students_average_score(subject_id):
-    return db.session.query(Score.student_id,Score.subject_id,(func.sum(Score.so_diem * ScoreType.he_so)/func.sum(ScoreType.he_so)).label('Diem Trung Binh'))\
-        .filter(Score.subject_id.__eq__(subject_id)).join(ScoreType,ScoreType.id.__eq__(Score.score_type_id)).group_by(Score.student_id).all()
-
 
 if __name__ == '__main__':
     with app.app_context():
-        # db.create_all()
-
-        print(get_all_students_average_score(3))
+        db.create_all()
 
         # admin1 = Admin(name='admin',
         #                username='admin',

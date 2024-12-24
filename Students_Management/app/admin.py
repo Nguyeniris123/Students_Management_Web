@@ -1,3 +1,4 @@
+from app.dao import get_all_students_average_score
 from app.models import (Class, Student, User, UserRole, Semester, Subject,
                         Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge, Schedule, LoaiDiem)
 from flask_admin import Admin, BaseView, expose, AdminIndexView
@@ -156,6 +157,7 @@ class ScoreView(AuthenticatedTeacherView):
         # Khởi tạo dữ liệu rỗng
         students = []
         student_scores = {}
+        average_scores = []
 
         # Lấy lớp và môn học được chọn
         class_id = request.args.get('class')
@@ -171,22 +173,25 @@ class ScoreView(AuthenticatedTeacherView):
             # Lấy điểm của học sinh cho môn học được chọn
             scores = Score.query.filter_by(subject_id=subject_id).all()
 
+            # Lấy điểm trung bình của học sinh cho môn học
+            average_scores = get_all_students_average_score(subject_id)
+
             # Phân loại điểm cho từng học sinh
             for student in students:
                 student_scores[student.id] = {
-                    "15 phút": [],
-                    "1 tiết": [],
-                    "cuối kỳ": [],
+                    "15phut": [],
+                    "1tiet": [],
+                    "cuoiky": [],
                 }
                 for score in scores:
                     if score.student_id == student.id:
                         score_type_name = score.score_type.name.name
                         if score_type_name == "diem15p":
-                            student_scores[student.id]["15 phút"].append({"id": score.id, "value": score.so_diem})
+                            student_scores[student.id]["15phut"].append({"id": score.id, "value": score.so_diem})
                         elif score_type_name == "diem1tiet":
-                            student_scores[student.id]["1 tiết"].append({"id": score.id, "value": score.so_diem})
+                            student_scores[student.id]["1tiet"].append({"id": score.id, "value": score.so_diem})
                         elif score_type_name == "diemck":
-                            student_scores[student.id]["cuối kỳ"].append({"id": score.id, "value": score.so_diem})
+                            student_scores[student.id]["cuoiky"].append({"id": score.id, "value": score.so_diem})
 
         # Truyền dữ liệu vào template
         return self.render(
@@ -195,6 +200,7 @@ class ScoreView(AuthenticatedTeacherView):
             subjects=subjects,
             students=students,
             student_scores=student_scores,
+            average_scores=average_scores,
             keyword=keyword
         )
 

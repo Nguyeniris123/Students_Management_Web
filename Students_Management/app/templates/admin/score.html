@@ -47,9 +47,7 @@
             <button class="btn btn-primary mt-3" type="submit">Tìm kiếm học sinh</button>
         </div>
     </div>
-
 </form>
-
 
 <hr>
 
@@ -58,13 +56,21 @@
     {% for student in students %}
     <div class="student-box mb-4 p-3 border">
         <h5> {{ loop.index }} - {{ student.name }}</h5>
-
+        <!-- Điểm trung bình làm tròn 2 chữ số thập phân-->
+        <div class="average-score mb-3">
+            <strong>Điểm trung bình:</strong>
+            {% for s in average_scores %}
+            {% if s.student_id == student.id %}
+            {{ s.DiemTrungBinh|round(2) }}
+            {% endif %}
+            {% endfor %}
+        </div>
         <!-- Điểm 15 phút -->
         <div class="score-section mb-3">
             <strong>15 phút:</strong>
             <div class="scores d-flex align-items-center flex-wrap">
-                {% if student_scores[student.id]["15 phút"] %}
-                {% for score in student_scores[student.id]["15 phút"] %}
+                {% if student_scores[student.id]["15phut"] %}
+                {% for score in student_scores[student.id]["15phut"] %}
                 <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
                     <span>{{ score.value }}</span>
                     <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ score.id }}, {{ score.value }})">
@@ -87,8 +93,8 @@
         <div class="score-section mb-3">
             <strong>1 tiết:</strong>
             <div class="scores d-flex align-items-center flex-wrap">
-                {% if student_scores[student.id]["1 tiết"] %}
-                {% for score in student_scores[student.id]["1 tiết"] %}
+                {% if student_scores[student.id]["1tiet"] %}
+                {% for score in student_scores[student.id]["1tiet"] %}
                 <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
                     <span>{{ score.value }}</span>
                     <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ score.id }}, {{ score.value }})">
@@ -111,8 +117,8 @@
         <div class="score-section mb-3">
             <strong>Cuối kỳ:</strong>
             <div class="scores d-flex align-items-center flex-wrap">
-                {% if student_scores[student.id]["cuối kỳ"] %}
-                {% for score in student_scores[student.id]["cuối kỳ"] %}
+                {% if student_scores[student.id]["cuoiky"] %}
+                {% for score in student_scores[student.id]["cuoiky"] %}
                 <div class="score-box d-flex align-items-center border rounded px-2 py-1 mx-1">
                     <span>{{ score.value }}</span>
                     <button class="btn btn-sm btn-warning mx-1" onclick="editScore({{ score.id }}, {{ score.value }})">
