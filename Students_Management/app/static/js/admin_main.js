@@ -37,8 +37,8 @@ function editScore(scoreId, currentValue) {
         })
         .then(response => response.json())
         .then(data => {
+            alert(data.message);
             if (data.success) {
-                alert(data.message);
                 location.reload(); // Tải lại trang
             }
         })
@@ -60,8 +60,8 @@ function deleteScore(scoreId) {
         })
         .then(response => response.json())
         .then(data => {
+            alert(data.message);
             if (data.success) {
-                alert(data.message);
                 location.reload(); // Tải lại trang để cập nhật danh sách điểm
             }
         })

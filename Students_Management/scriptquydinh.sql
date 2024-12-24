@@ -3,7 +3,7 @@
 -- - Tối thiểu 1 và tối đa 3 bài kiểm tra 1 tiết.
 -- - Có 1 điểm thi cuối kỳ
 DELIMITER $$
-CREATE TRIGGER check_scores_insert
+CREATE TRIGGER check_score_type_insert
 BEFORE INSERT ON score
 FOR EACH ROW
 BEGIN
@@ -50,7 +50,7 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE TRIGGER check_scores_update
+CREATE TRIGGER check_score_type_update
 BEFORE UPDATE ON score
 FOR EACH ROW
 BEGIN
@@ -93,6 +93,32 @@ BEGIN
     IF NEW.score_type_id = (SELECT id FROM score_type WHERE name = 'diemck') AND count_cuoi_ky > 1 THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Mỗi học sinh chỉ có 1 điểm thi cuối kỳ duy nhất.';
+    END IF;
+END$$
+DELIMITER ;
+
+-- Kiểm tra điểm từ 0-10 mới được nhập vào
+DELIMITER $$
+CREATE TRIGGER check_score_insert
+BEFORE INSERT ON score
+FOR EACH ROW
+BEGIN
+    IF NEW.so_diem < 0 OR NEW.so_diem > 10 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Điểm số không hợp lệ. Điểm phải nằm trong khoảng từ 0 đến 10';
+    END IF;
+END$$
+DELIMITER ;
+
+-- Kiểm tra điểm có nằm từ 0-10 khi cập nhật
+DELIMITER $$
+CREATE TRIGGER check_score_update
+BEFORE UPDATE ON score
+FOR EACH ROW
+BEGIN
+    IF NEW.so_diem < 0 OR NEW.so_diem > 10 THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Điểm số không hợp lệ. Điểm phải nằm trong khoảng từ 0 đến 10';
     END IF;
 END$$
 DELIMITER ;
@@ -208,10 +234,15 @@ END$$
 DELIMITER ;
 
 
--- DROP TRIGGER IF EXISTS check_scores_insert;
--- DROP TRIGGER IF EXISTS check_scores_update;
+-- DROP TRIGGER IF EXISTS check_score_type_insert;
+-- DROP TRIGGER IF EXISTS check_score_type_update;
+
+-- DROP TRIGGER IF EXISTS check_score_insert;
+-- DROP TRIGGER IF EXISTS check_score_update;
+
 -- DROP TRIGGER IF EXISTS subject_year_insert;
 -- DROP TRIGGER IF EXISTS subject_year_update;
+
 -- DROP TRIGGER IF EXISTS check_student_age_insert;
 -- DROP TRIGGER IF EXISTS check_student_age_update;
 
