@@ -122,7 +122,7 @@ class RegulationMaxStudentView(AdminView):
 
 class RegulationAgeView(AdminView):
     column_list = ['id', 'name', 'min_age', 'max_age']
-    form_columns = ['name', 'min_age', 'max_age']
+    form_columns = ['name', 'min_age', 'max_age', 'students']
 
 
 class ScheduleView(AdminView):

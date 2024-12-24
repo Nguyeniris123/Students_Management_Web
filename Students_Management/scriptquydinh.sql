@@ -152,30 +152,34 @@ DELIMITER ;
 
 DELIMITER $$
 CREATE TRIGGER check_student_age_insert
-BEFORE INSERT ON user
+BEFORE INSERT ON student
 FOR EACH ROW
 BEGIN
+    DECLARE student_birth DATE;
     DECLARE student_age INT;
     DECLARE min_age_student INT;
     DECLARE max_age_student INT;
 
-    -- Tính tuổi của học sinh
-    SET student_age = TIMESTAMPDIFF(YEAR, NEW.birth, CURDATE());
-    
-    
-    -- Lấy giới hạn độ tuổi từ RegulationAge thông qua regulation_age_id
-    SELECT min_age, max_age
+    -- Lấy ngày sinh từ bảng User
+    SELECT birth INTO student_birth FROM user WHERE id = NEW.id;
+
+    -- Lấy giới hạn tuổi từ RegulationAge
+    SELECT min_age, max_age 
     INTO min_age_student, max_age_student
     FROM regulation_age
-    WHERE id = 2;
+    WHERE id = NEW.regulation_age_id;
 
-    -- Kiểm tra độ tuổi
+    -- Tính tuổi
+    SET student_age = TIMESTAMPDIFF(YEAR, student_birth, CURDATE());
+
+    -- Kiểm tra tuổi
     IF student_age < min_age_student OR student_age > max_age_student THEN
         SIGNAL SQLSTATE '45000'
         SET MESSAGE_TEXT = 'Tuổi học sinh không hợp lệ. Tuổi phải nằm trong khoảng quy định.';
     END IF;
 END$$
 DELIMITER ;
+
 
 DELIMITER $$
 CREATE TRIGGER check_student_age_update
@@ -186,23 +190,23 @@ BEGIN
     DECLARE min_age_student INT;
     DECLARE max_age_student INT;
 
-    -- Tính tuổi của học sinh
-    SET student_age = TIMESTAMPDIFF(YEAR, NEW.birth, CURDATE());
-    
-    
-    -- Lấy giới hạn độ tuổi từ RegulationAge thông qua regulation_age_id
-    SELECT min_age, max_age
-    INTO min_age_student, max_age_student
-    FROM regulation_age
-    WHERE id = 2;
+        -- Lấy giới hạn tuổi từ RegulationAge thông qua regulation_age_id
+        SELECT min_age, max_age 
+        INTO min_age_student, max_age_student
+        FROM regulation_age
+        WHERE id = (SELECT regulation_age_id FROM student WHERE id = OLD.id);
 
-    -- Kiểm tra độ tuổi
-    IF student_age < min_age_student OR student_age > max_age_student THEN
-        SIGNAL SQLSTATE '45000'
-        SET MESSAGE_TEXT = 'Tuổi học sinh không hợp lệ. Tuổi phải nằm trong khoảng quy định.';
-    END IF;
+        -- Tính tuổi dựa vào ngày sinh mới
+        SET student_age = TIMESTAMPDIFF(YEAR, NEW.birth, CURDATE());
+
+        -- Kiểm tra độ tuổi có nằm trong khoảng quy định hay không
+        IF student_age < min_age_student OR student_age > max_age_student THEN
+            SIGNAL SQLSTATE '45000'
+            SET MESSAGE_TEXT = 'Ngày sinh không hợp lệ. Tuổi phải nằm trong khoảng quy định.';
+        END IF;
 END$$
 DELIMITER ;
+
 
 -- DROP TRIGGER IF EXISTS check_scores_insert;
 -- DROP TRIGGER IF EXISTS check_scores_update;
