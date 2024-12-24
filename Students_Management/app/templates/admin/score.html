@@ -15,8 +15,7 @@
             <label for="class">Lớp</label>
             <select class="form-control" id="class" name="class">
                 {% for cls in classes %}
-                <option value="{{ cls.id }}"
-                        {% if cls.id== request.args.get('class')|int %} selected {% endif %}>
+                <option value="{{ cls.id }}" {% if cls.id == request.args.get('class')|int %} selected {% endif %}>
                 {{ cls }}
                 </option>
                 {% endfor %}
@@ -28,8 +27,7 @@
             <label for="subject">Môn học</label>
             <select class="form-control" id="subject" name="subject">
                 {% for subj in subjects %}
-                <option value="{{ subj.id }}"
-                        {% if subj.id== request.args.get('subject')|int %} selected {% endif %}>
+                <option value="{{ subj.id }}" {% if subj.id== request.args.get('subject')|int %} selected {% endif %}>
                 {{ subj }}
                 </option>
                 {% endfor %}
@@ -43,8 +41,15 @@
                        value="{{ request.args.get('kw', '') }}">
             </form>
         </div>
-        <div class="col-md-6 col-12 d-flex">
+        <div class="col-md-3 col-12 d-flex">
             <button class="btn btn-primary mt-3" type="submit">Tìm kiếm học sinh</button>
+        </div>
+        <div class="col-md-3 col-12 d-flex">
+            <form method="post" action="{{ url_for('scoreview.export_pdf') }}">
+                <input type="hidden" name="class" value="{{ request.args.get('class') }}">
+                <input type="hidden" name="subject" value="{{ request.args.get('subject') }}">
+                <button class="btn btn-success mt-3">Xuất PDF điểm TB</button>
+            </form>
         </div>
     </div>
 </form>

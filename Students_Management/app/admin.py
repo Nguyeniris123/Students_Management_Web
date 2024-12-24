@@ -1,11 +1,14 @@
-from app.dao import get_all_students_average_score
+from io import BytesIO
+from reportlab.lib.pagesizes import letter
 from app.models import (Class, Student, User, UserRole, Semester, Subject,
                         Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge, Schedule, LoaiDiem)
+from app.dao import get_students_by_class, get_scores_by_subject, add_score, edit_score, delete_score, get_all_students_average_score
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from app import app, db
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, logout_user
-from flask import redirect, request, jsonify
+from flask import redirect, request, jsonify, make_response
+from reportlab.pdfgen import canvas
 
 
 class MyAdminIndexView(AdminIndexView):
@@ -164,25 +167,16 @@ class ScoreView(AuthenticatedTeacherView):
         subject_id = request.args.get('subject')
 
         if class_id and subject_id:
-            # Lấy danh sách học sinh trong lớp
-            query = Student.query.filter_by(class_id=class_id)
-            if keyword:
-                query = query.filter(Student.name.like(f'%{keyword}%'))
-            students = query.order_by(Student.name).all()
+            # Lấy danh sách học sinh và điểm trung bình
+            students = get_students_by_class(class_id, keyword)
+            average_scores = get_all_students_average_score(subject_id)
 
             # Lấy điểm của học sinh cho môn học được chọn
-            scores = Score.query.filter_by(subject_id=subject_id).all()
-
-            # Lấy điểm trung bình của học sinh cho môn học
-            average_scores = get_all_students_average_score(subject_id)
+            scores = get_scores_by_subject(subject_id)
 
             # Phân loại điểm cho từng học sinh
             for student in students:
-                student_scores[student.id] = {
-                    "15phut": [],
-                    "1tiet": [],
-                    "cuoiky": [],
-                }
+                student_scores[student.id] = {"15phut": [], "1tiet": [], "cuoiky": []}
                 for score in scores:
                     if score.student_id == student.id:
                         score_type_name = score.score_type.name.name
@@ -206,94 +200,73 @@ class ScoreView(AuthenticatedTeacherView):
 
     @expose('/add_score', methods=['POST'])
     def add_score(self):
-        try:
-            data = request.json
-            student_id = data.get('student_id')
-            subject_id = data.get('subject_id')
-            score_type_name = data.get('score_type')  # 'diem15p', 'diem1tiet', 'diemck'
-            score_value = data.get('score_value')
-
-            # Kiểm tra dữ liệu đầu vào
-            if not all([student_id, subject_id, score_type_name, score_value]):
-                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'})
-
-            # Chuyển đổi loại điểm từ chuỗi sang enum
-            if score_type_name == 'diem15p':
-                score_type_enum = LoaiDiem.diem15p
-            elif score_type_name == 'diem1tiet':
-                score_type_enum = LoaiDiem.diem1tiet
-            elif score_type_name == 'diemck':  # Điều kiện đúng cho 'diemck'
-                score_type_enum = LoaiDiem.diemck
-            else:
-                raise ValueError(f"Loại điểm không hợp lệ: {score_type_name}")
-
-            # Lấy loại điểm từ bảng ScoreType
-            score_type = ScoreType.query.filter_by(name=score_type_enum).first()
-            if not score_type:
-                return jsonify({'success': False, 'message': 'Không tìm thấy loại điểm tương ứng.'})
-
-            # Tạo điểm mới
-            new_score = Score(
-                student_id=student_id,
-                subject_id=subject_id,
-                score_type_id=score_type.id,
-                so_diem=score_value
-            )
-
-            db.session.add(new_score)
-            db.session.commit()
-
-            return jsonify({'success': True, 'message': 'Thêm điểm thành công!'})
-
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
+        data = request.json
+        result = add_score(data.get('student_id'), data.get('subject_id'), data.get('score_type'),
+                           data.get('score_value'))
+        return jsonify(result)
 
     @expose('/edit_score', methods=['POST'])
     def edit_score(self):
-        try:
-            data = request.json
-            score_id = data.get('score_id')
-            new_value = data.get('new_value')
-            if not all([score_id, new_value is not None]):
-                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'})
-
-            # Tìm điểm cần sửa
-            score = Score.query.get(score_id)
-            if not score:
-                return jsonify({'success': False, 'message': 'Không tìm thấy điểm.'})
-
-            # Cập nhật giá trị mới
-            score.so_diem = new_value
-            db.session.commit()
-
-            return jsonify({'success': True, 'message': 'Sửa điểm thành công!'})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
+        data = request.json
+        result = edit_score(data.get('score_id'), data.get('new_value'))
+        return jsonify(result)
 
     @expose('/delete_score', methods=['POST'])
     def delete_score(self):
-        try:
-            data = request.json
-            score_id = data.get('score_id')
-            # Kiểm tra dữ liệu đầu vào
-            if not score_id:
-                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'})
+        data = request.json
+        result = delete_score(data.get('score_id'))
+        return jsonify(result)
 
-            # Tìm điểm cần xóa
-            score = Score.query.get(score_id)
-            if not score:
-                return jsonify({'success': False, 'message': 'Không tìm thấy điểm.'})
+    @expose('/export_pdf', methods=['POST'])
+    def export_pdf(self):
+        class_id = request.form.get('class')
+        subject_id = request.form.get('subject')
 
-            # Xóa điểm
-            db.session.delete(score)
-            db.session.commit()
+        # Lấy danh sách học sinh
+        students = Student.query.filter_by(class_id=class_id).order_by(Student.name).all()
 
-            return jsonify({'success': True, 'message': 'Xóa điểm thành công!'})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
+        # Lấy điểm trung bình của từng học sinh
+        average_scores = get_all_students_average_score(subject_id)
+
+        # Tạo buffer để lưu file PDF
+        buffer = BytesIO()
+        pdf = canvas.Canvas(buffer, pagesize=letter)
+
+        # Tiêu đề
+        pdf.setFont("Helvetica-Bold", 16)
+        pdf.drawString(200, 750, "TABLE AVERAGE SCORE")
+        pdf.setFont("Helvetica", 12)
+        pdf.drawString(50, 730, f"Class: {Class.query.get(class_id).name}")
+        pdf.drawString(300, 730, f"Subject: {Subject.query.get(subject_id)}")
+
+        # Bảng điểm
+        pdf.drawString(50, 700, "STT")
+        pdf.drawString(100, 700, "Student")
+        pdf.drawString(400, 700, "Average score")
+
+        y = 680  # Vị trí dòng đầu tiên
+        for index, student in enumerate(students):
+            avg_score = next((avg.DiemTrungBinh for avg in average_scores if avg.student_id == student.id), None)
+            avg_score = f"{avg_score:.2f}" if avg_score else "N/A"
+
+            pdf.drawString(50, y, str(index + 1))  # STT
+            pdf.drawString(100, y, student.name)  # Tên học sinh
+            pdf.drawString(400, y, avg_score)  # Điểm trung bình
+
+            y -= 20  # Dòng tiếp theo
+            if y < 50:  # Tạo trang mới nếu hết trang
+                pdf.showPage()
+                y = 750
+
+        # Kết thúc file PDF
+        pdf.save()
+        buffer.seek(0)
+
+        # Trả về file PDF để tải xuống
+        response = make_response(buffer.getvalue())
+        response.headers['Content-Disposition'] = 'attachment; filename=bang_diem.pdf'
+        response.headers['Content-Type'] = 'application/pdf'
+        return response
 
 
 # Thêm các bảng vào Flask-Admin
