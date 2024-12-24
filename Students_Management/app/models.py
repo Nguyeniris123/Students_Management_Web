@@ -1,6 +1,4 @@
-from email.policy import default
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, Enum, func
-from sqlalchemy.ext.associationproxy import association_proxy
 from sqlalchemy.orm import relationship, validates
 from app import db, app
 from enum import Enum as RoleEnum, unique

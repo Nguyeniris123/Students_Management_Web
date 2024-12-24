@@ -1,4 +1,3 @@
-from datetime import date
 from app.models import (Class, Student, User, UserRole, Semester, Subject,
                         Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge, Schedule, LoaiDiem)
 from flask_admin import Admin, BaseView, expose, AdminIndexView
@@ -6,8 +5,6 @@ from app import app, db
 from flask_admin.contrib.sqla import ModelView
 from flask_login import current_user, logout_user
 from flask import redirect, request, jsonify
-from sqlalchemy.exc import IntegrityError
-from flask import flash
 
 
 class MyAdminIndexView(AdminIndexView):
@@ -106,7 +103,7 @@ class SubjectView(AdminView):
     column_searchable_list = ['id', 'name']
 
 
-# class ScoreView(GiaoVienAdminView):
+# class ScoreView1(GiaoVienAdminView):
 #     column_list = ['id', 'student', 'so_diem', 'attempt', 'subject', 'score_type']
 #     column_filters = ['id']
 #     can_export = True
@@ -207,12 +204,12 @@ class ScoreView(AuthenticatedTeacherView):
             data = request.json
             student_id = data.get('student_id')
             subject_id = data.get('subject_id')
-            score_type_name = data.get('score_type')  # '15 phút', '1 tiết', 'cuối kỳ'
+            score_type_name = data.get('score_type')  # 'diem15p', 'diem1tiet', 'diemck'
             score_value = data.get('score_value')
 
             # Kiểm tra dữ liệu đầu vào
             if not all([student_id, subject_id, score_type_name, score_value]):
-                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'}), 400
+                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'})
 
             # Chuyển đổi loại điểm từ chuỗi sang enum
             if score_type_name == 'diem15p':
@@ -227,7 +224,7 @@ class ScoreView(AuthenticatedTeacherView):
             # Lấy loại điểm từ bảng ScoreType
             score_type = ScoreType.query.filter_by(name=score_type_enum).first()
             if not score_type:
-                return jsonify({'success': False, 'message': 'Không tìm thấy loại điểm tương ứng.'}), 404
+                return jsonify({'success': False, 'message': 'Không tìm thấy loại điểm tương ứng.'})
 
             # Tạo điểm mới
             new_score = Score(
@@ -244,7 +241,7 @@ class ScoreView(AuthenticatedTeacherView):
 
         except Exception as e:
             db.session.rollback()
-            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'}), 500
+            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
 
     @expose('/edit_score', methods=['POST'])
     def edit_score(self):
@@ -253,12 +250,12 @@ class ScoreView(AuthenticatedTeacherView):
             score_id = data.get('score_id')
             new_value = data.get('new_value')
             if not all([score_id, new_value is not None]):
-                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'}), 400
+                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'})
 
             # Tìm điểm cần sửa
             score = Score.query.get(score_id)
             if not score:
-                return jsonify({'success': False, 'message': 'Không tìm thấy điểm.'}), 404
+                return jsonify({'success': False, 'message': 'Không tìm thấy điểm.'})
 
             # Cập nhật giá trị mới
             score.so_diem = new_value
@@ -267,7 +264,7 @@ class ScoreView(AuthenticatedTeacherView):
             return jsonify({'success': True, 'message': 'Sửa điểm thành công!'})
         except Exception as e:
             db.session.rollback()
-            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'}), 500
+            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
 
     @expose('/delete_score', methods=['POST'])
     def delete_score(self):
@@ -276,12 +273,12 @@ class ScoreView(AuthenticatedTeacherView):
             score_id = data.get('score_id')
             # Kiểm tra dữ liệu đầu vào
             if not score_id:
-                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'}), 400
+                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'})
 
             # Tìm điểm cần xóa
             score = Score.query.get(score_id)
             if not score:
-                return jsonify({'success': False, 'message': 'Không tìm thấy điểm.'}), 404
+                return jsonify({'success': False, 'message': 'Không tìm thấy điểm.'})
 
             # Xóa điểm
             db.session.delete(score)
@@ -290,7 +287,7 @@ class ScoreView(AuthenticatedTeacherView):
             return jsonify({'success': True, 'message': 'Xóa điểm thành công!'})
         except Exception as e:
             db.session.rollback()
-            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'}), 500
+            return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
 
 
 # Thêm các bảng vào Flask-Admin
@@ -300,7 +297,7 @@ admin.add_view(ClassGradeView(ClassGrade, db.session))
 admin.add_view(YearView(Year, db.session))
 admin.add_view(SemesterView(Semester, db.session))
 admin.add_view(SubjectView(Subject, db.session))
-# admin.add_view(ScoreView(Score, db.session))
+# admin.add_view(ScoreView1(Score, db.session))
 admin.add_view(ScoreTypeView(ScoreType, db.session))
 admin.add_view(RegulationMaxStudentView(RegulationMaxStudent, db.session))
 admin.add_view(RegulationAgeView(RegulationAge, db.session))

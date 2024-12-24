@@ -19,7 +19,6 @@ function addScore(studentId, scoreType) {
         }
     })
     .catch(error => {
-        console.error('Lỗi:', error);
         alert('Không thể thêm điểm. Vui lòng thử lại.');
     });
 }
@@ -44,7 +43,6 @@ function editScore(scoreId, currentValue) {
             }
         })
         .catch(error => {
-            console.error('Lỗi:', error);
             alert('Không thể sửa điểm. Vui lòng thử lại.');
         });
     }
@@ -68,7 +66,6 @@ function deleteScore(scoreId) {
             }
         })
         .catch(error => {
-            console.error("Lỗi khi xóa điểm:", error);
             alert("Đã xảy ra lỗi khi xóa điểm.");
         });
     }

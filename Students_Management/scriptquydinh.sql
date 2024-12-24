@@ -3,8 +3,8 @@
 -- - Tối thiểu 1 và tối đa 3 bài kiểm tra 1 tiết.
 -- - Có 1 điểm thi cuối kỳ
 DELIMITER $$
-CREATE TRIGGER trg_check_scores_insert
-BEFORE INSERT ON Score
+CREATE TRIGGER check_scores_insert
+BEFORE INSERT ON score
 FOR EACH ROW
 BEGIN
     DECLARE count_15p INT;
@@ -13,7 +13,7 @@ BEGIN
 
     -- Đếm số lượng điểm 15 phút
     SELECT COUNT(*) INTO count_15p
-    FROM Score
+    FROM score
     WHERE student_id = NEW.student_id
       AND subject_id = NEW.subject_id
       AND score_type_id = (SELECT id FROM score_type WHERE name = 'diem15p');
@@ -25,7 +25,7 @@ BEGIN
 
     -- Đếm số lượng bài kiểm tra 1 tiết
     SELECT COUNT(*) INTO count_1tiet
-    FROM Score
+    FROM score
     WHERE student_id = NEW.student_id
       AND subject_id = NEW.subject_id
       AND score_type_id = (SELECT id FROM score_type WHERE name = 'diem1tiet');
@@ -37,7 +37,7 @@ BEGIN
 
     -- Đếm số lượng điểm cuối kỳ
     SELECT COUNT(*) INTO count_cuoi_ky
-    FROM Score
+    FROM score
     WHERE student_id = NEW.student_id
       AND subject_id = NEW.subject_id
       AND score_type_id = (SELECT id FROM score_type WHERE name = 'diemck');
@@ -50,8 +50,8 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-CREATE TRIGGER trg_check_scores_update
-BEFORE UPDATE ON Score
+CREATE TRIGGER check_scores_update
+BEFORE UPDATE ON score
 FOR EACH ROW
 BEGIN
     DECLARE count_15p INT;
@@ -60,7 +60,7 @@ BEGIN
 
     -- Đếm số lượng điểm 15 phút
     SELECT COUNT(*) INTO count_15p
-    FROM Score
+    FROM score
     WHERE student_id = NEW.student_id
       AND subject_id = NEW.subject_id
       AND score_type_id = (SELECT id FROM score_type WHERE name = 'diem15p');
@@ -72,7 +72,7 @@ BEGIN
 
     -- Đếm số lượng bài kiểm tra 1 tiết
     SELECT COUNT(*) INTO count_1tiet
-    FROM Score
+    FROM score
     WHERE student_id = NEW.student_id
       AND subject_id = NEW.subject_id
       AND score_type_id = (SELECT id FROM score_type WHERE name = 'diem1tiet');
@@ -84,7 +84,7 @@ BEGIN
 
     -- Đếm số lượng điểm cuối kỳ
     SELECT COUNT(*) INTO count_cuoi_ky
-    FROM Score
+    FROM score
     WHERE student_id = NEW.student_id
       AND subject_id = NEW.subject_id
       AND score_type_id = (SELECT id FROM score_type WHERE name = 'diemck');
@@ -99,7 +99,7 @@ DELIMITER ;
 
 -- Năm của học kỳ và năm của khối lớp phải trùng nhau khi tạo hoặc chỉnh sửa môn học (Subject)
 DELIMITER $$
-CREATE TRIGGER trg_validate_subject_year_insert
+CREATE TRIGGER subject_year_insert
 BEFORE INSERT ON subject
 FOR EACH ROW
 BEGIN
@@ -125,8 +125,7 @@ END$$
 DELIMITER ;
 
 DELIMITER $$
-
-CREATE TRIGGER trg_validate_subject_year_update
+CREATE TRIGGER subject_year_update
 BEFORE UPDATE ON subject
 FOR EACH ROW
 BEGIN
@@ -151,38 +150,65 @@ BEGIN
 END$$
 DELIMITER ;
 
--- DELIMITER $$
--- CREATE TRIGGER check_student_age
--- BEFORE INSERT ON student
--- FOR EACH ROW
--- BEGIN
---     DECLARE student_age INT;
---     DECLARE min_age INT;
---     DECLARE max_age INT;
+DELIMITER $$
+CREATE TRIGGER check_student_age_insert
+BEFORE INSERT ON user
+FOR EACH ROW
+BEGIN
+    DECLARE student_age INT;
+    DECLARE min_age_student INT;
+    DECLARE max_age_student INT;
 
---     -- Tính tuổi của học sinh
---     SET student_age = TIMESTAMPDIFF(YEAR, NEW.birth, CURDATE());
+    -- Tính tuổi của học sinh
+    SET student_age = TIMESTAMPDIFF(YEAR, NEW.birth, CURDATE());
+    
+    
+    -- Lấy giới hạn độ tuổi từ RegulationAge thông qua regulation_age_id
+    SELECT min_age, max_age
+    INTO min_age_student, max_age_student
+    FROM regulation_age
+    WHERE id = 2;
 
---     -- Lấy giới hạn tuổi từ RegulationAge
---     SELECT min_age, max_age
---     INTO min_age, max_age
---     FROM regulation_age
---     WHERE id = NEW.regulation_age_id;
+    -- Kiểm tra độ tuổi
+    IF student_age < min_age_student OR student_age > max_age_student THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Tuổi học sinh không hợp lệ. Tuổi phải nằm trong khoảng quy định.';
+    END IF;
+END$$
+DELIMITER ;
 
---     -- Kiểm tra tuổi
---     IF student_age < min_age OR student_age > max_age THEN
---         SIGNAL SQLSTATE '45000'
---         SET MESSAGE_TEXT = 'Tuổi học sinh không hợp lệ. Tuổi phải nằm trong khoảng quy định.';
---     END IF;
--- END$$
--- DELIMITER ;
+DELIMITER $$
+CREATE TRIGGER check_student_age_update
+BEFORE UPDATE ON user
+FOR EACH ROW
+BEGIN
+    DECLARE student_age INT;
+    DECLARE min_age_student INT;
+    DECLARE max_age_student INT;
 
+    -- Tính tuổi của học sinh
+    SET student_age = TIMESTAMPDIFF(YEAR, NEW.birth, CURDATE());
+    
+    
+    -- Lấy giới hạn độ tuổi từ RegulationAge thông qua regulation_age_id
+    SELECT min_age, max_age
+    INTO min_age_student, max_age_student
+    FROM regulation_age
+    WHERE id = 2;
 
+    -- Kiểm tra độ tuổi
+    IF student_age < min_age_student OR student_age > max_age_student THEN
+        SIGNAL SQLSTATE '45000'
+        SET MESSAGE_TEXT = 'Tuổi học sinh không hợp lệ. Tuổi phải nằm trong khoảng quy định.';
+    END IF;
+END$$
+DELIMITER ;
 
--- DROP TRIGGER IF EXISTS trg_check_scores_insert;
--- DROP TRIGGER IF EXISTS trg_check_scores_update;
--- DROP TRIGGER IF EXISTS trg_validate_subject_year_insert;
--- DROP TRIGGER IF EXISTS trg_validate_subject_year_update;
--- DROP TRIGGER IF EXISTS check_student_age;
+-- DROP TRIGGER IF EXISTS check_scores_insert;
+-- DROP TRIGGER IF EXISTS check_scores_update;
+-- DROP TRIGGER IF EXISTS subject_year_insert;
+-- DROP TRIGGER IF EXISTS subject_year_update;
+-- DROP TRIGGER IF EXISTS check_student_age_insert;
+-- DROP TRIGGER IF EXISTS check_student_age_update;
 
 
