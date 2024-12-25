@@ -1,8 +1,13 @@
+from datetime import datetime
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
+from sqlalchemy import Date
+
 from app.models import (Class, Student, User, UserRole, Semester, Subject,
-                        Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge, Schedule, LoaiDiem)
-from app.dao import get_students_by_class, get_scores_by_subject, add_score, edit_score, delete_score, get_all_students_average_score
+                        Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge, Schedule, LoaiDiem,
+                        Gender)
+from app.dao import get_students_by_class, get_scores_by_subject, add_score, edit_score, delete_score, \
+    get_all_students_average_score
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from app import app, db
 from flask_admin.contrib.sqla import ModelView
@@ -34,6 +39,12 @@ class AuthenticatedTeacherView(BaseView):
     def is_accessible(self):
         return current_user.is_authenticated and (
                 current_user.user_role == UserRole.ADMIN or current_user.user_role == UserRole.GIAOVIEN)
+
+
+class AuthenticatedStaffView(BaseView):
+    def is_accessible(self):
+        return current_user.is_authenticated and (
+                current_user.user_role == UserRole.ADMIN or current_user.user_role == UserRole.NHANVIEN)
 
 
 class AdminView(ModelView):
@@ -68,11 +79,11 @@ class GiaoVienAdminView(ModelView):
                 current_user.user_role == UserRole.ADMIN or current_user.user_role == UserRole.GIAOVIEN)
 
 
-class StudentView(NhanVienAdminView):
-    column_list = ['id', 'name', 'username', 'sex', 'birth', 'regulation_age', 'address', 'phone', 'email', 'user_role']
-    form_columns = ['name', 'username', 'sex', 'birth', 'address', 'phone', 'email']
-    column_searchable_list = ['id', 'name']
-    column_editable_list = ['name', 'sex', 'birth', 'address', 'phone', 'email']
+# class StudentView(NhanVienAdminView):
+#     column_list = ['id', 'name', 'username', 'sex', 'birth', 'regulation_age', 'address', 'phone', 'email', 'user_role']
+#     form_columns = ['name', 'username', 'sex', 'birth', 'address', 'phone', 'email']
+#     column_searchable_list = ['id', 'name']
+#     column_editable_list = ['name', 'sex', 'birth', 'address', 'phone', 'email']
 
 
 class ClassView(NhanVienAdminView):
@@ -145,6 +156,65 @@ class StatsView(AuthenticatedAdminView):
     @expose('/')
     def index(self):
         return self.render('admin/stats.html')
+
+
+class StudentView(AuthenticatedStaffView):
+    @expose('/', methods=['GET', 'POST'])
+    def index(self):
+        # Lấy danh sách học sinh từ cơ sở dữ liệu
+        students = Student.query.order_by(Student.name).all()
+
+        # Truyền danh sách học sinh và enum Gender vào template
+        return self.render(
+            'admin/student.html',
+            students=students,
+            Gender=Gender  # Truyền enum vào template
+        )
+
+    @expose('/add_student', methods=['GET', 'POST'])
+    def add_student(self):
+        if request.method == 'POST':
+            data = request.get_json()  # Nhận dữ liệu JSON từ client (AJAX)
+
+            # Lấy thông tin từ form
+            name = data.get('name')
+            gender = data.get('gender')
+            birth = data.get('birth')
+            email = data.get('email')
+            phone = data.get('phone')
+            address = data.get('address')
+
+            # Kiểm tra dữ liệu
+            if not all([name, gender, birth, email, phone, address]):
+                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'})
+
+            # Chuyển đổi ngày sinh từ chuỗi sang kiểu Date
+            birth_date = datetime.strptime(birth, '%Y-%m-%d').date() if birth else None
+            username_phone = phone
+
+            try:
+                # Tạo đối tượng học sinh mới
+                new_student = Student(
+                    username=username_phone,
+                    name=name,
+                    sex=Gender(int(gender)),  # Chuyển giá trị gender thành Enum
+                    birth=birth_date,
+                    email=email,
+                    phone=phone,
+                    address=address
+                )
+
+                # Thêm học sinh vào cơ sở dữ liệu
+                db.session.add(new_student)
+                db.session.commit()
+
+                return jsonify({'success': True, 'message': 'Thêm học sinh thành công!'})
+            except Exception as e:
+                db.session.rollback()
+                return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
+
+        # Nếu là GET, trả về form HTML
+        return self.render('admin/add_student_form.html')
 
 
 class ScoreView(AuthenticatedTeacherView):
@@ -270,7 +340,7 @@ class ScoreView(AuthenticatedTeacherView):
 
 
 # Thêm các bảng vào Flask-Admin
-admin.add_view(StudentView(Student, db.session))
+# admin.add_view(StudentView(Student, db.session))
 admin.add_view(ClassView(Class, db.session))
 admin.add_view(ClassGradeView(ClassGrade, db.session))
 admin.add_view(YearView(Year, db.session))
@@ -281,6 +351,7 @@ admin.add_view(ScoreTypeView(ScoreType, db.session))
 admin.add_view(RegulationMaxStudentView(RegulationMaxStudent, db.session))
 admin.add_view(RegulationAgeView(RegulationAge, db.session))
 admin.add_view(ScheduleView(Schedule, db.session))
+admin.add_view(StudentView(name='Student'))
 admin.add_view(ScoreView(name='Score'))
 admin.add_view(StatsView(name='Stat'))
 admin.add_view(LogoutView(name='Logout'))

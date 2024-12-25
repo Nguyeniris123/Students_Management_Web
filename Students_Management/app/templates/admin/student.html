@@ -1,0 +1,97 @@
+{% extends 'admin/master.html' %}
+{% block head %}
+{{ super() }}
+<link rel="shortcut icon" href="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499755/images_oyg6ud.png">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style.css') }}">
+{% endblock %}
+{% block body %}
+<h1 class="text-center mt-1">Quản lý học sinh</h1>
+<div class="container mt-5">
+    <!-- Form thêm học sinh -->
+    <form id="add_student_form" method="POST" class="mb-4">
+        <div class="row g-3">
+            <!-- Họ và tên -->
+            <div class="col-md-6">
+                <label for="name" class="form-label">Họ và tên</label>
+                <input type="text" class="form-control" id="name" name="name" placeholder="Nhập họ tên" required>
+            </div>
+            <!-- Giới tính -->
+            <div class="col-md-6">
+                <label for="gender" class="form-label">Giới tính</label>
+                <select class="form-control" id="gender" name="gender">
+                    {% for gender in Gender %}
+                    <option value="{{ gender.value }}">{{ gender.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <!-- Ngày sinh -->
+            <div class="col-md-6">
+                <label for="birth" class="form-label">Ngày sinh</label>
+                <input type="date" class="form-control" id="birth" name="birth" required>
+            </div>
+            <!-- Email -->
+            <div class="col-md-6">
+                <label for="email" class="form-label">Email</label>
+                <input type="email" class="form-control" id="email" name="email" placeholder="Nhập email" required>
+            </div>
+            <!-- Số điện thoại -->
+            <div class="col-md-6">
+                <label for="phone" class="form-label">Số điện thoại</label>
+                <input type="text" class="form-control" id="phone" name="phone" placeholder="Nhập số điện thoại"
+                       pattern="[0-9]{10}" required>
+            </div>
+            <!-- Địa chỉ -->
+            <div class="col-md-6">
+                <label for="address" class="form-label">Địa chỉ</label>
+                <input type="text" class="form-control" id="address" name="address" placeholder="Nhập địa chỉ" required>
+            </div>
+            <!-- Button thêm -->
+            <div class="col-12 mt-2">
+                <button type="button" class="btn btn-primary" onclick="addStudent()">Thêm học sinh</button>
+            </div>
+        </div>
+    </form>
+</div>
+
+    <!-- Danh sách học sinh -->
+    <table class="table table-bordered table-striped">
+        <thead class="table-primary text-center">
+        <tr>
+            <th>STT</th>
+            <th>Họ và tên</th>
+            <th>Giới tính</th>
+            <th>Email</th>
+            <th>Số điện thoại</th>
+            <th>Địa chỉ</th>
+            <th>Ngày sinh</th>
+            <th>Hành động</th>
+        </tr>
+        </thead>
+        <tbody>
+        <!-- Dữ liệu mẫu -->
+        {% for student in students %}
+        <tr>
+            <td>{{ loop.index }}</td>
+            <td>{{ student.name }}</td>
+            <td>{{ student.sex }}</td>
+            <td>{{ student.email }}</td>
+            <td>{{ student.phone }}</td>
+            <td>{{ student.address }}</td>
+            <td>{{ student.birth }}</td>
+            <td class="text-center">
+                <!-- Button sửa -->
+                <button class="btn btn-warning btn-sm" onclick="editStudent({{ student.id }})">Sửa</button>
+                <!-- Button xóa -->
+                <button class="btn btn-danger btn-sm" onclick="deleteStudent({{ student.id }})">Xóa</button>
+            </td>
+        </tr>
+        {% endfor %}
+        </tbody>
+    </table>
+</div>
+
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin_main.js') }}"></script>
+{% endblock %}
+{% endblock %}

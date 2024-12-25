@@ -71,3 +71,48 @@ function deleteScore(scoreId) {
     }
 }
 
+function addStudent() {
+    const name = document.getElementById('name').value;
+    const gender = document.getElementById('gender').value;
+    const birth = document.getElementById('birth').value;
+    const email = document.getElementById('email').value;
+    const phone = document.getElementById('phone').value;
+    const address = document.getElementById('address').value;
+
+    // Kiểm tra dữ liệu nhập vào
+    if (!name || !gender || !birth || !email || !phone || !address) {
+        alert("Vui lòng điền đầy đủ thông tin.");
+        return;
+    }
+
+    const data = {
+        name: name,
+        gender: gender,
+        birth: birth,
+        email: email,
+        phone: phone,
+        address: address
+    };
+
+    fetch('/admin/studentview/add_student', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json'
+        },
+        body: JSON.stringify(data)
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+    });
+}
+
+
