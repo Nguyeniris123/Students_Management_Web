@@ -13,9 +13,11 @@ function addScore(studentId, scoreType) {
     })
     .then(response => response.json())
     .then(data => {
-        alert(data.message);
         if (data.success) {
+            alert(data.message);
             location.reload();
+        } else {
+            alert(data.message);
         }
     })
     .catch(error => {
@@ -37,9 +39,11 @@ function editScore(scoreId, currentValue) {
         })
         .then(response => response.json())
         .then(data => {
-            alert(data.message);
             if (data.success) {
+                alert(data.message);
                 location.reload(); // Tải lại trang
+            } else {
+                alert(data.message);
             }
         })
         .catch(error => {
@@ -60,13 +64,15 @@ function deleteScore(scoreId) {
         })
         .then(response => response.json())
         .then(data => {
-            alert(data.message);
             if (data.success) {
+                alert(data.message);
                 location.reload(); // Tải lại trang để cập nhật danh sách điểm
+            } else {
+                alert(data.message);
             }
         })
         .catch(error => {
-            alert("Đã xảy ra lỗi khi xóa điểm.");
+            alert("Không thể xoá điểm. Vui lòng thử lại.");
         });
     }
 }
@@ -114,5 +120,29 @@ function addStudent() {
         alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
     });
 }
+
+function deleteStudent(studentId) {
+    if (confirm("Bạn có chắc chắn muốn xóa học sinh này?")) {
+        fetch(`/admin/studentview/delete_student/${studentId}`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                location.reload();
+            } else {
+                alert(data.message);
+            }
+        })
+        .catch(error => {
+            alert('Đã có lỗi xảy ra. Vui lòng thử lại.');
+        });
+    }
+}
+
 
 

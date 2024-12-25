@@ -136,7 +136,7 @@ class RegulationMaxStudentView(AdminView):
 
 
 class RegulationAgeView(AdminView):
-    column_list = ['id', 'name', 'min_age', 'max_age']
+    column_list = ['id', 'name', 'min_age', 'max_age', 'students']
     form_columns = ['name', 'min_age', 'max_age', 'students']
 
 
@@ -173,48 +173,61 @@ class StudentView(AuthenticatedStaffView):
 
     @expose('/add_student', methods=['GET', 'POST'])
     def add_student(self):
-        if request.method == 'POST':
-            data = request.get_json()  # Nhận dữ liệu JSON từ client (AJAX)
+        data = request.get_json()  # Nhận dữ liệu JSON từ client (AJAX)
 
-            # Lấy thông tin từ form
-            name = data.get('name')
-            gender = data.get('gender')
-            birth = data.get('birth')
-            email = data.get('email')
-            phone = data.get('phone')
-            address = data.get('address')
+        # Lấy thông tin từ form
+        name = data.get('name')
+        gender = data.get('gender')
+        birth = data.get('birth')
+        email = data.get('email')
+        phone = data.get('phone')
+        address = data.get('address')
 
-            # Kiểm tra dữ liệu
-            if not all([name, gender, birth, email, phone, address]):
-                return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'})
+        # Kiểm tra dữ liệu
+        if not all([name, gender, birth, email, phone, address]):
+            return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'})
 
-            # Chuyển đổi ngày sinh từ chuỗi sang kiểu Date
-            birth_date = datetime.strptime(birth, '%Y-%m-%d').date() if birth else None
-            username_phone = phone
+        # Chuyển đổi ngày sinh từ chuỗi sang kiểu Date
+        birth_date = datetime.strptime(birth, '%Y-%m-%d').date() if birth else None
+        username_phone = phone
 
-            try:
-                # Tạo đối tượng học sinh mới
-                new_student = Student(
-                    username=username_phone,
-                    name=name,
-                    sex=Gender(int(gender)),  # Chuyển giá trị gender thành Enum
-                    birth=birth_date,
-                    email=email,
-                    phone=phone,
-                    address=address
-                )
+        try:
+            # Tạo đối tượng học sinh mới
+            new_student = Student(
+                username=username_phone,
+                name=name,
+                sex=Gender(int(gender)),  # Chuyển giá trị gender thành Enum
+                birth=birth_date,
+                email=email,
+                phone=phone,
+                address=address
+            )
 
-                # Thêm học sinh vào cơ sở dữ liệu
-                db.session.add(new_student)
-                db.session.commit()
+            # Thêm học sinh vào cơ sở dữ liệu
+            db.session.add(new_student)
+            db.session.commit()
 
-                return jsonify({'success': True, 'message': 'Thêm học sinh thành công!'})
-            except Exception as e:
-                db.session.rollback()
-                return jsonify({'success': False, 'message': f'Lỗi: {str(e)}'})
+            return jsonify({'success': True, 'message': 'Thêm học sinh thành công!'})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': 'Lỗi: Tuổi học sinh sai quy định, ...'})
 
-        # Nếu là GET, trả về form HTML
-        return self.render('admin/add_student_form.html')
+    @expose('/delete_student/<int:student_id>', methods=['POST'])
+    def delete_student(self, student_id):
+        try:
+            # Tìm học sinh theo ID
+            student = Student.query.get(student_id)
+            if not student:
+                return jsonify({'success': False, 'message': 'Học sinh không tồn tại.'})
+
+            # Xóa học sinh
+            db.session.delete(student)
+            db.session.commit()
+
+            return jsonify({'success': True, 'message': 'Xóa học sinh thành công!'})
+        except Exception as e:
+            db.session.rollback()
+            return jsonify({'success': False, 'message': 'Lỗi'})
 
 
 class ScoreView(AuthenticatedTeacherView):

@@ -55,7 +55,7 @@ def add_score(student_id, subject_id, score_type_name, score_value):
         return {"success": True, "message": "Thêm điểm thành công!"}
     except SQLAlchemyError as e:
         db.session.rollback()
-        return {"success": False, "message": str(e)}
+        return {"success": False, "message": 'Lỗi: Điểm phải từ 0 - 10, Số cột điểm không được vượt quá quy định'}
 
 
 def edit_score(score_id, new_value):
@@ -71,7 +71,7 @@ def edit_score(score_id, new_value):
         return {"success": True, "message": "Sửa điểm thành công!"}
     except SQLAlchemyError as e:
         db.session.rollback()
-        return {"success": False, "message": str(e)}
+        return {"success": False, "message": 'Lỗi: Điểm phải từ 0 - 10, Số cột điểm không được vượt quá quy định'}
 
 
 def delete_score(score_id):
@@ -87,4 +87,4 @@ def delete_score(score_id):
         return {"success": True, "message": "Xóa điểm thành công!"}
     except SQLAlchemyError as e:
         db.session.rollback()
-        return {"success": False, "message": str(e)}
+        return {"success": False, "message": 'Lỗi'}
