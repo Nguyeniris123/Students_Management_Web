@@ -1,7 +1,7 @@
+from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
-
-from app.models import User, Score, ScoreType, Student
+from app.models import User, Score, ScoreType, Student, Gender
 from app import app, db
 import hashlib
 
@@ -17,6 +17,65 @@ def auth_user(username, password, role=None):
 
 def get_user_by_id(id):
     return User.query.get(id)
+
+def get_students_by_kw(keyword=None):
+    if keyword:
+        return Student.query.filter(Student.name.ilike(f"%{keyword}%")).all()
+    return Student.query.order_by(Student.name).all()
+
+def add_student(data):
+    try:
+        # Lấy thông tin từ form
+        name = data.get('name')
+        gender = data.get('gender')
+        birth = data.get('birth')
+        email = data.get('email')
+        phone = data.get('phone')
+        address = data.get('address')
+
+        # Kiểm tra dữ liệu đầu vào
+        if not all([name, gender, birth, email, phone, address]):
+            return {'success': False, 'message': 'Dữ liệu không đầy đủ.'}
+
+        # Chuyển đổi ngày sinh từ chuỗi sang kiểu Date
+        birth_date = datetime.strptime(birth, '%Y-%m-%d').date() if birth else None
+
+        # Tạo đối tượng học sinh mới
+        new_student = Student(
+            username=phone,  # Đặt username là số điện thoại
+            name=name,
+            sex=Gender(int(gender)),  # Chuyển giá trị gender thành Enum
+            birth=birth_date,
+            email=email,
+            phone=phone,
+            address=address
+        )
+
+        # Thêm học sinh vào cơ sở dữ liệu
+        db.session.add(new_student)
+        db.session.commit()
+
+        return {'success': True, 'message': 'Thêm học sinh thành công!'}
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': 'Lỗi: Tuổi học sinh sai quy định,...'}
+
+
+def delete_student(student_id):
+    try:
+        # Tìm học sinh theo ID
+        student = Student.query.get(student_id)
+        if not student:
+            return {'success': False, 'message': 'Học sinh không tồn tại.'}
+
+        # Xóa học sinh
+        db.session.delete(student)
+        db.session.commit()
+
+        return {'success': True, 'message': 'Xóa học sinh thành công!'}
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': 'Lỗi'}
 
 # Lay ra nhung hoc sinh hoc mon hoc
 def get_all_students_average_score(subject_id):

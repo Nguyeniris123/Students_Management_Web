@@ -7,7 +7,7 @@ from app.models import (Class, Student, User, UserRole, Semester, Subject,
                         Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge, Schedule, LoaiDiem,
                         Gender)
 from app.dao import get_students_by_class, get_scores_by_subject, add_score, edit_score, delete_score, \
-    get_all_students_average_score
+    get_all_students_average_score, get_students_by_kw, add_student, delete_student
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from app import app, db
 from flask_admin.contrib.sqla import ModelView
@@ -95,7 +95,7 @@ class ClassView(NhanVienAdminView):
     column_searchable_list = ['id', 'name']
 
 
-class ClassGradeView(NhanVienAdminView):
+class ClassGradeView(AdminView):
     column_list = ['id', 'name', 'subjects', 'classes', 'year']
     column_searchable_list = ['id', 'name']
 
@@ -124,7 +124,7 @@ class SubjectView(AdminView):
 #     can_export = True
 
 
-class ScoreTypeView(GiaoVienAdminView):
+class ScoreTypeView(AdminView):
     column_list = ['id', 'name', 'he_so']
     form_columns = ['name', 'he_so']
     column_filters = ['id', 'name']
@@ -161,73 +161,40 @@ class StatsView(AuthenticatedAdminView):
 class StudentView(AuthenticatedStaffView):
     @expose('/', methods=['GET', 'POST'])
     def index(self):
-        # Lấy danh sách học sinh từ cơ sở dữ liệu
-        students = Student.query.order_by(Student.name).all()
+
+        # Lấy từ khóa tìm kiếm
+        keyword = request.args.get('kw', '').strip()
+
+        # Lấy danh sách học sinh từ kw
+        students = get_students_by_kw(keyword)
+
 
         # Truyền danh sách học sinh và enum Gender vào template
         return self.render(
             'admin/student.html',
             students=students,
-            Gender=Gender  # Truyền enum vào template
+            Gender=Gender,  # Truyền enum vào template
+            keyword=keyword
         )
 
-    @expose('/add_student', methods=['GET', 'POST'])
+    @expose('/add_student', methods=['POST'])
     def add_student(self):
         data = request.get_json()  # Nhận dữ liệu JSON từ client (AJAX)
 
-        # Lấy thông tin từ form
-        name = data.get('name')
-        gender = data.get('gender')
-        birth = data.get('birth')
-        email = data.get('email')
-        phone = data.get('phone')
-        address = data.get('address')
+        # Gọi hàm từ DAO
+        result = add_student(data)
 
-        # Kiểm tra dữ liệu
-        if not all([name, gender, birth, email, phone, address]):
-            return jsonify({'success': False, 'message': 'Dữ liệu không đầy đủ.'})
-
-        # Chuyển đổi ngày sinh từ chuỗi sang kiểu Date
-        birth_date = datetime.strptime(birth, '%Y-%m-%d').date() if birth else None
-        username_phone = phone
-
-        try:
-            # Tạo đối tượng học sinh mới
-            new_student = Student(
-                username=username_phone,
-                name=name,
-                sex=Gender(int(gender)),  # Chuyển giá trị gender thành Enum
-                birth=birth_date,
-                email=email,
-                phone=phone,
-                address=address
-            )
-
-            # Thêm học sinh vào cơ sở dữ liệu
-            db.session.add(new_student)
-            db.session.commit()
-
-            return jsonify({'success': True, 'message': 'Thêm học sinh thành công!'})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'success': False, 'message': 'Lỗi: Tuổi học sinh sai quy định, ...'})
+        # Trả về kết quả
+        return jsonify(result)
 
     @expose('/delete_student/<int:student_id>', methods=['POST'])
+    @expose('/delete_student/<int:student_id>', methods=['POST'])
     def delete_student(self, student_id):
-        try:
-            # Tìm học sinh theo ID
-            student = Student.query.get(student_id)
-            if not student:
-                return jsonify({'success': False, 'message': 'Học sinh không tồn tại.'})
+        # Gọi hàm từ DAO
+        result = delete_student(student_id)
 
-            # Xóa học sinh
-            db.session.delete(student)
-            db.session.commit()
-
-            return jsonify({'success': True, 'message': 'Xóa học sinh thành công!'})
-        except Exception as e:
-            db.session.rollback()
-            return jsonify({'success': False, 'message': 'Lỗi'})
+        # Trả về kết quả
+        return jsonify(result)
 
 
 class ScoreView(AuthenticatedTeacherView):
@@ -354,17 +321,17 @@ class ScoreView(AuthenticatedTeacherView):
 
 # Thêm các bảng vào Flask-Admin
 # admin.add_view(StudentView(Student, db.session))
-admin.add_view(ClassView(Class, db.session))
-admin.add_view(ClassGradeView(ClassGrade, db.session))
-admin.add_view(YearView(Year, db.session))
-admin.add_view(SemesterView(Semester, db.session))
-admin.add_view(SubjectView(Subject, db.session))
 # admin.add_view(ScoreView1(Score, db.session))
+admin.add_view(StudentView(name='Student'))
+admin.add_view(ClassView(Class, db.session))
+admin.add_view(ScoreView(name='Score'))
+admin.add_view(SubjectView(Subject, db.session))
+admin.add_view(ScheduleView(Schedule, db.session))
+admin.add_view(YearView(Year, db.session))
+admin.add_view(ClassGradeView(ClassGrade, db.session))
+admin.add_view(SemesterView(Semester, db.session))
 admin.add_view(ScoreTypeView(ScoreType, db.session))
 admin.add_view(RegulationMaxStudentView(RegulationMaxStudent, db.session))
 admin.add_view(RegulationAgeView(RegulationAge, db.session))
-admin.add_view(ScheduleView(Schedule, db.session))
-admin.add_view(StudentView(name='Student'))
-admin.add_view(ScoreView(name='Score'))
 admin.add_view(StatsView(name='Stat'))
 admin.add_view(LogoutView(name='Logout'))
