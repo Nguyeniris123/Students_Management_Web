@@ -1,0 +1,106 @@
+{% extends 'layout/base.html' %} 
+
+{% block content %}
+{% if msg and alert %}
+    <div class="alert alert-{{alert}} alert-dismissible fade show alert_size">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>Alert!!</strong> {{msg}}
+    </div>
+{% endif %}
+<div id="demo" class="container carousel slide">
+    <!-- The slideshow/carousel -->
+    <div class="carousel-inner">
+      <div class="card carousel-item active">
+          <div class="card-header">
+              <h4>Thay đổi thông tin cá nhân</h4>
+          </div>
+          <div class="card-body">
+              <form method="POST" action="/changeinfo" enctype="multipart/form-data">
+                  <!-- Phần thay đổi địa chỉ email -->
+                  <div class="mb-3">
+                      <label for="email" class="form-label">Email</label>
+                      <input type="email" class="form-control" id="email" placeholder="abc@gmail.com" name="email">
+                  </div>
+                  
+                   <!-- Phần thay đổi số điện thoại -->
+                  <div class="mb-3">
+                      <label for="phone" class="form-label">Số điện thoại</label>
+                      <input type="text" class="form-control" id="phone" placeholder="0764642709" name="phone">
+                  </div>
+                  
+                   <!-- Phần thay đổi địa chỉ -->
+                  <div class="mb-3">
+                      <label for="address" class="form-label">Địa chỉ</label>
+                      <input type="text" class="form-control" id="address" placeholder="..." name="address">
+                  </div>
+  
+                  <!-- Phần thay đổi hình ảnh -->
+                  <div class="mb-3">
+                    <label for="avatar">Ảnh đại diện</label>
+                    <input type="file" accept=".png,.jpg" class="form-control" id="avatar" placeholder="Ảnh đại diện" name="avatar">
+                  </div>
+  
+                  <!-- Nút lưu thay đổi -->
+                  <div class="text-center">
+                      <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                  </div>
+              </form>
+          </div>
+      </div>
+      
+      <div class="card carousel-item">
+      <div class="card-header">
+        <h4>Thay đổi mật khẩu</h4>
+      </div>
+      <div class="card-body">
+        <form method="POST" action="/changeinfo">
+          <!-- Phần thay đổi mật khẩu -->
+            <div class="mb-3">
+              <label for="currentPassword" class="form-label"
+                >Mật khẩu hiện tại</label
+              >
+              <input
+                type="password"
+                class="form-control"
+                id="currentPassword"
+                placeholder="currentPassword"
+                name="currentPassword"
+              />
+            </div>
+            <div class="mb-3">
+              <label for="newPassword" class="form-label">Mật khẩu mới</label>
+              <input
+                type="password"
+                class="form-control"
+                id="newPassword"
+                placeholder="newPassword"
+                name="newPassword"
+              />
+            </div>
+            <div class="mb-3">
+              <label for="confirmPassword" class="form-label"
+                >Xác nhận lại mật khẩu</label
+              >
+              <input
+                type="password"
+                class="form-control"
+                id="confirmPassword"
+                placeholder="confirmPassword!!"
+                name="confirmPassword"
+              />
+            </div>
+            <!-- Nút lưu thay đổi -->
+                  <div class="text-center">
+                      <button type="submit" class="btn btn-primary">Lưu thay đổi</button>
+                  </div>
+         <form>
+       </div>
+     </div>
+    </div>
+  
+    <!-- Left and right controls/icons -->
+    <button class="carousel-control-next bg_col" type="button" data-bs-target="#demo" data-bs-slide="next">
+      <span class="carousel-control-next-icon color_item"></span>
+    </button>
+  </div>
+  {% endblock %}

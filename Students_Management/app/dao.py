@@ -1,9 +1,10 @@
 from datetime import datetime
 from sqlalchemy import func
 from sqlalchemy.exc import SQLAlchemyError
-from app.models import User, Score, ScoreType, Student, Gender
+from app.models import User, Score, ScoreType, Student, Gender, Regulation, Year, Semester, Subject, RegulationAge, RegulationMaxStudent
 from app import app, db
 import hashlib
+import cloudinary.uploader
 
 def auth_user(username, password, role=None):
     password = str(hashlib.md5(password.encode('utf-8')).hexdigest())
@@ -177,3 +178,100 @@ def delete_score(score_id):
     except SQLAlchemyError as e:
         db.session.rollback()
         return {"success": False, "message": 'Lỗi'}
+    
+def get_user_by_id(id):
+    return User.query.get(id)
+
+def load_year():
+    return Year.query.order_by('id').all()
+
+def load_semester(id=None):
+    if id:
+        return Semester.query.order_by('id').filter_by(year_id = id).all()
+    
+def load_subject(semester_id=None, class_grade_id=None):
+    if semester_id and class_grade_id:
+        return Subject.query.order_by('id').filter_by(semester_id = semester_id, class_grade_id = class_grade_id).all()
+    
+def load_score_type():
+    return ScoreType.query.order_by('id').all()
+
+def load_score(score_type_id=None, student_id=None, subject_id=None):
+    query = Score.query
+    if score_type_id and student_id and subject_id:
+        return query.filter_by(student_id=student_id, subject_id=subject_id, score_type_id=score_type_id).all()
+        
+def load_regulation(id=None):
+    if id:
+        return Regulation.query.get(id)
+    return Regulation.query.order_by('id').all()
+ 
+def load_detail_regulation(id=None):
+    if id:
+        if RegulationAge.query.get(id):
+            return RegulationAge.query.filter(RegulationAge.id.__eq__(id)).first()
+        if RegulationMaxStudent.query.get(id):
+            return RegulationMaxStudent.query.filter(RegulationMaxStudent.id.__eq__(id)).first()
+        
+def change_password(student_id=None, password=None, new_password=None):
+    if student_id and password and new_password:
+        password = str(hashlib.md5(password.strip().encode('utf-8')).hexdigest())
+        new_password = str(hashlib.md5(new_password.strip().encode('utf-8')).hexdigest())
+        user = User.query.filter(User.id.__eq__(student_id), User.password.__eq__(password)).first()
+        if user:
+            user.password = new_password
+            db.session.commit()
+            return True
+        else:
+            return False
+        
+def change_information(student_id=None, email=None, phone=None, address=None, avatar=None):
+    if student_id:
+        user = User.query.get(student_id)
+        if user:
+            if email:
+                user.email = email
+                db.session.commit()
+            if phone:
+                user.phone = phone
+                db.session.commit()
+            if address:
+                user.address = address
+                db.session.commit()
+            if avatar:
+                res = cloudinary.uploader.upload(avatar)
+                user.avatar = res.get('secure_url')
+                db.session.commit()
+            if email or phone or address or avatar:
+                return True
+
+    return False
+
+def check_password(new_password=None, confirm_password=None):
+    if confirm_password and new_password:
+        if confirm_password.__eq__(new_password):
+            return True
+    return False
+
+def get_classgrade_id(student_id:None):
+    if student_id:
+        student = Student.query.get(student_id)
+        if student:
+            return student.class_.class_grade.id
+
+def get_average_score(subject_id=None, student_id=None):
+    if student_id and subject_id:
+        query = db.session.query(
+            (func.sum(Score.so_diem * ScoreType.he_so) / func.sum(ScoreType.he_so))
+        ).select_from(Score)  # select_from được gọi đầu tiên
+
+        # Thêm join sau khi select_from
+        query = query.join(ScoreType, ScoreType.id == Score.score_type_id)
+
+        # Thêm filter sau khi join
+        query = query.filter(
+            Score.subject_id == subject_id,
+            Score.student_id == student_id
+        )
+        # Thực hiện nhóm dữ liệu và trả về kết quả
+        return query.group_by(Score.subject_id).scalar()

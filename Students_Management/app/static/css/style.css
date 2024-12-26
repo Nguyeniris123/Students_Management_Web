@@ -20,3 +20,23 @@ body {
     width: 100%; /* Đảm bảo ảnh bao phủ toàn chiều rộng */
 }
 
+.email-container {
+    max-width: 600px;
+    margin: 0 auto;
+    background-color: #21adf8;
+    padding: 30px;
+    border-radius: 8px;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+.email-footer {
+    font-size: 12px;
+    color: #aaa;
+    text-align: center;
+    margin-top: 20px;
+}
+
+.bg_col{
+    background-color: #626466;
+    width: 6%;
+}
+

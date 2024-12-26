@@ -1,0 +1,102 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container">
+    <div class="card">
+        <div class="card-header">
+            <h4>Quy Định Trường Học</h4>
+        </div>
+        <div class="card-body">
+            <h5 class="card-title">Danh Sách Quy Định</h5>
+            <ul class="list-group">
+                <li class="list-group-item" data-bs-toggle="modal" data-bs-target="#rule1Modal">Quy định về giờ học</li>
+                <li class="list-group-item" data-bs-toggle="modal" data-bs-target="#rule2Modal">Quy định về trang phục</li>
+                <li class="list-group-item" data-bs-toggle="modal" data-bs-target="#rule3Modal">Quy định về vắng mặt</li>
+                <li class="list-group-item" data-bs-toggle="modal" data-bs-target="#rule4Modal">Quy định về thi cử</li>
+                {% if regulations %}
+                    {% for regulation in regulations %}
+                        <li class="list-group-item" data-bs-toggle="modal" data-bs-target="#{{regulation.id}}" onclick="load_regulation({{regulation.id}})">Quy định về {{regulation.name}}</li>
+                    {% endfor %}
+                {% endif %}
+            </ul>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Rule 1 -->
+<div class="modal fade" id="rule1Modal" tabindex="-1" aria-labelledby="rule1ModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rule1ModalLabel">Quy Định Về Giờ Học</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Giờ học bắt đầu vào lúc 8:00 sáng và kết thúc vào lúc 5:00 chiều. Sinh viên phải có mặt trước 5 phút để đảm bảo buổi học không bị gián đoạn. Việc đi học muộn có thể dẫn đến việc bị trừ điểm danh hoặc bị xử lý theo quy định của trường.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Rule 2 -->
+<div class="modal fade" id="rule2Modal" tabindex="-1" aria-labelledby="rule2ModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rule2ModalLabel">Quy Định Về Trang Phục</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Sinh viên cần mặc đồng phục của trường trong các buổi học. Trang phục phải gọn gàng, lịch sự, không được mặc áo thun, quần short hoặc dép lê. Các trang phục phản cảm hoặc không phù hợp sẽ không được chấp nhận trong khuôn viên trường.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Rule 3 -->
+<div class="modal fade" id="rule3Modal" tabindex="-1" aria-labelledby="rule3ModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rule3ModalLabel">Quy Định Về Vắng Mặt</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Sinh viên có quyền vắng mặt trong một số buổi học, tuy nhiên không quá 3 buổi học mỗi học kỳ. Nếu vắng mặt quá số buổi quy định, sinh viên sẽ không đủ điều kiện thi cuối kỳ. Cần có lý do hợp lệ và thông báo cho giảng viên trước khi vắng mặt.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal for Rule 4 -->
+<div class="modal fade" id="rule4Modal" tabindex="-1" aria-labelledby="rule4ModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="rule4ModalLabel">Quy Định Về Thi Cử</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <p>Sinh viên cần tham gia đầy đủ các kỳ thi cuối kỳ và các kỳ thi giữa kỳ. Việc gian lận trong thi cử sẽ bị xử lý nghiêm khắc, có thể bị đình chỉ học tập hoặc buộc thôi học nếu vi phạm lần đầu.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Đóng</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div id="contain_model_regulations">
+
+</div>
+
+{% endblock %}
