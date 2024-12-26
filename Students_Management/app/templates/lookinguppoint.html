@@ -1,0 +1,107 @@
+{% extends 'layout/base.html' %}
+
+{% block content %}
+<div class="container">
+    {% if message and aleart %}
+    <div class="alert alert-{{aleart}} alert-dismissible fade show alert_size">
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        <strong>Alert!!</strong> {{message}}
+    </div>
+    {% endif %}
+    <div class="card">
+        <div class="card-header">
+            <h4>Xem Điểm Sinh Viên</h4>
+        </div>
+        <div class="card-body">
+            <!-- Form để chọn môn học, năm học, học kỳ -->
+            <form method=['get'] action="/lookuppoints">
+                <div class="row">
+                    <div class="col-md-6">
+                        <label for="year" class="form-label">Chọn Năm Học:</label>
+                        {% if years %}
+                        <select id="year" class="form-select" name="year" onchange="selectYear(this)">
+                                {% for year in years %}
+                                    <option value="{{year.id}}" {% if year.id == request.args.get('year') %} selected {% endif %}>{{year.name}}</option>
+                                {% endfor %}   
+                        </select>
+                        {% endif %}
+                    </div>
+                    <div class="col-md-6">
+                        <label for="semester" class="form-label">Chọn Học Kỳ:</label>
+                        <select id="semester" class="form-select" name="semester">
+                            {% if semesters %}
+                                {% for semester in semesters %}
+                                    <option value="{{semester.id}}" {% if semester.id == request.args.get('semester') %} selected {% endif %}>{{semester.name}}</option>
+                                {% endfor %}
+                            {% endif %}
+                        </select>
+                    </div>
+                </div>
+                <div class="text-center mt-3">
+                    <button type="submit" class="btn btn-primary">Xem Điểm</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Bảng điểm -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h4>Bảng Điểm</h4>
+        </div>
+        <div class="card-body">
+            <table class="table table-bordered">
+                <thead>
+                    <tr>
+                        <th scope="col">STT</th>
+                        <th scope="col">Môn Học</th>
+                        {% if score_types %}
+                            {% for score_type in score_types %}
+                                <th scope="col">{{score_type.name}}</th>
+                            {% endfor %}
+                        {% else %}
+                        <th scope="col">Điểm 15 phút</th>
+                        <th scope="col">Điểm 1 tiết</th>
+                        <th scope="col">Điểm Thi</th>
+                        {% endif %}
+                        <th scope="col">Điểm Trung Bình</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% if subjects and score_types %}
+                    {% for subject in subjects %}
+                        <tr>
+                            <td>{{subject.id}}</td>
+                            <td>{{subject.name}}</td>
+                            {% for score in score_types %}
+                            <td>
+                                {% if subject_score[subject.id][score.id] %}
+                                    {% for score_data in subject_score[subject.id][score.id] %}
+                                        {{score_data.so_diem}}{% if not loop.last %} , {% endif %}
+                                    {% endfor %}
+                                {% else %}
+                                Ngu
+                                {% endif %}
+                            </td>
+                            {% endfor %}
+                            <td>    
+                            {% if average_subject %}
+                                {{average_subject[subject.id]}}
+                            {% endif %}
+                            </td>
+                        </tr>    
+                    {% endfor %}
+                    {% elif subjects %}
+                        <tr>
+                            {% for subject in subjects %}
+                                <td>{{subject.id}}</td>
+                                <td>{{subject.name}}</td>
+                            {% endfor %}
+                        </tr>
+                    {% endif %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+{% endblock %}
