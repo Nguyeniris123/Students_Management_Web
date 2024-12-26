@@ -8,9 +8,7 @@ from flask_mail import Message
 
 @app.route("/")
 def index():
-    page = request.args.get('page', 1)
-    page_size = app.config.get('PAGE_SIZE', 8)
-    return render_template('index.html', pages=page_size)
+    return render_template('index.html')
 
 @app.route("/lookuppoints", methods=['get'])
 def lookuppoints():
