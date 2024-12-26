@@ -5,9 +5,10 @@ from sqlalchemy import Date
 
 from app.models import (Class, Student, User, UserRole, Semester, Subject,
                         Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge, Schedule, LoaiDiem,
-                        Gender)
+                        Gender, ClassRoom)
 from app.dao import get_students_by_class, get_scores_by_subject, add_score, edit_score, delete_score, \
-    get_all_students_average_score, get_students_by_kw, add_student, delete_student
+    get_all_students_average_score, get_students_by_kw, add_student, delete_student, change_student_class, \
+    add_student_to_class
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from app import app, db
 from flask_admin.contrib.sqla import ModelView
@@ -94,6 +95,9 @@ class ClassView(NhanVienAdminView):
     }
     column_searchable_list = ['id', 'name']
 
+class ClassRoomView(AdminView):
+    column_list = ['id', 'name', 'classes']
+    column_searchable_list = ['id', 'name']
 
 class ClassGradeView(AdminView):
     column_list = ['id', 'name', 'subjects', 'classes', 'year']
@@ -188,13 +192,67 @@ class StudentView(AuthenticatedStaffView):
         return jsonify(result)
 
     @expose('/delete_student/<int:student_id>', methods=['POST'])
-    @expose('/delete_student/<int:student_id>', methods=['POST'])
     def delete_student(self, student_id):
         # Gọi hàm từ DAO
         result = delete_student(student_id)
 
         # Trả về kết quả
         return jsonify(result)
+
+    @expose('/update_student_class', methods=['POST'])
+    def update_student_class(self):
+        data = request.get_json()
+        student_id = data.get('student_id')
+        new_class_id = data.get('new_class_id')
+
+        if not student_id or not new_class_id:
+            return jsonify({'success': False, 'message': 'Thiếu thông tin học sinh hoặc lớp mới.'})
+
+        result = change_student_class(student_id, new_class_id)
+        return jsonify(result)
+
+    @expose('/add_student_to_class', methods=['POST'])
+    def add_student_to_class(self):
+        data = request.get_json()
+        student_id = data.get('student_id')
+        class_id = data.get('class_id')
+
+        if not student_id or not class_id:
+            return jsonify({'success': False, 'message': 'Thiếu thông tin học sinh hoặc lớp.'})
+
+        result = add_student_to_class(student_id, class_id)
+        return jsonify(result)
+
+class StudentClassView(AuthenticatedStaffView):
+    @expose('/', methods=['GET', 'POST'])
+    def index(self):
+        # Lấy danh sách lớp
+        classes = Class.query.order_by(Class.name).all()
+        hocsinh = Student.query.order_by(Student.name).all()
+
+        # Lấy từ khóa tìm kiếm
+        keyword = request.args.get('kw', '').strip()
+
+        # Khởi tạo dữ liệu rỗng
+        students = []
+
+        # Lấy lớp và môn học được chọn
+        class_id = request.args.get('class')
+
+        if class_id:
+            # Lấy danh sách học sinh
+            students = get_students_by_class(class_id, keyword)
+
+        # Truyền danh sách học sinh và enum Gender vào template
+        return self.render(
+            'admin/studentClass.html',
+            students=students,
+            classes=classes,
+            hocsinh=hocsinh,
+            keyword=keyword
+        )
+
+
 
 
 class ScoreView(AuthenticatedTeacherView):
@@ -323,10 +381,12 @@ class ScoreView(AuthenticatedTeacherView):
 # admin.add_view(StudentView(Student, db.session))
 # admin.add_view(ScoreView1(Score, db.session))
 admin.add_view(StudentView(name='Student'))
+admin.add_view(StudentClassView(name='Student in class'))
 admin.add_view(ClassView(Class, db.session))
 admin.add_view(ScoreView(name='Score'))
 admin.add_view(SubjectView(Subject, db.session))
 admin.add_view(ScheduleView(Schedule, db.session))
+admin.add_view(ClassRoomView(ClassRoom, db.session))
 admin.add_view(YearView(Year, db.session))
 admin.add_view(ClassGradeView(ClassGrade, db.session))
 admin.add_view(SemesterView(Semester, db.session))

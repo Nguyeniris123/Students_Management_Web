@@ -1,0 +1,91 @@
+{% extends 'admin/master.html' %}
+{% block head %}
+{{ super() }}
+<link rel="shortcut icon" href="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499755/images_oyg6ud.png">
+<link rel="stylesheet" href="{{ url_for('static', filename='css/admin_style.css') }}">
+{% endblock %}
+{% block body %}
+<h1 class="text-center mt-1">Danh sách học sinh lớp</h1>
+<form method="get" action="{{ url_for('studentclassview.index') }}">
+    <div class="row">
+        <!-- Dropdown chọn lớp -->
+        <div class="col-md-6 col-12">
+            <label for="class">Lớp</label>
+            <select class="form-control" id="class" name="class">
+                {% for cls in classes %}
+                <option value="{{ cls.id }}" {% if cls.id== request.args.get('class')|int %} selected {% endif %}>
+                {{ cls }}
+                </option>
+                {% endfor %}
+            </select>
+        </div>
+        <div class="col-md-6 col-12">
+            <label>Sĩ số</label>
+        </div>
+        <div class="col-md-6 col-12 d-flex">
+            <form method="get" action="/" class="row d-flex w-100">
+                <input class="col-md-9 col-9 form-control me-2 mt-3" type="text" name="kw"
+                       placeholder="Nhập tên học sinh để tìm kiếm"
+                       value="{{ request.args.get('kw', '') }}">
+                <button class="col-md-3 col-3 btn btn-success mt-3" type="submit">Tìm kiếm</button>
+            </form>
+        </div>
+    </div>
+</form>
+
+<form method="post" action="{{ url_for('studentclassview.index') }}">
+    <div class="row ">
+        <div class="col-md-9 col-9 mt-2">
+            <label for="studentSelect" class="form-label">Chọn học sinh</label>
+            <select id="studentSelect" class="form-control">
+                <option value="">Chọn học sinh</option>
+                {% for hs in hocsinh %}
+                <option value="{{ hs.id }}">{{ hs }}</option>
+                {% endfor %}
+            </select>
+        </div>
+       <button type="button" class="col-md-2 col-2 btn btn-primary mt-3" onclick="addStudentToClass()">Thêm học sinh</button>
+    </div>
+</form>
+
+<!-- Danh sách học sinh của lớp -->
+<table class="table table-bordered table-striped mt-5">
+    <thead class="table-primary text-center">
+    <tr>
+        <th>STT</th>
+        <th>Họ và tên</th>
+        <th>Giới tính</th>
+        <th>Ngày sinh</th>
+        <th>Địa chỉ</th>
+        <th>Xoá học sinh</th>
+    </tr>
+    </thead>
+    <tbody>
+    {% if students %}
+    {% for student in students %}
+    <tr>
+        <td>{{ loop.index }}</td>
+        <td>{{ student.name }}</td>
+        <td>{{ student.sex }}</td>
+        <td>{{ student.birth }}</td>
+        <td>{{ student.address }}</td>
+        <td class="text-center">
+            <!-- Button xóa -->
+            <button class="btn btn-danger btn-sm" onclick="updateStudentClass({{ student.id }})">
+                Xóa
+            </button>
+        </td>
+    </tr>
+    {% endfor %}
+    {% else %}
+    <tr>
+        <td colspan="6" class="text-center">Không tìm thấy học sinh.</td>
+    </tr>
+    {% endif %}
+    </tbody>
+</table>
+
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/admin_main.js') }}"></script>
+{% endblock %}
+{% endblock %}

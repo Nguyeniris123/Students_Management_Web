@@ -58,7 +58,7 @@ def add_student(data):
         return {'success': True, 'message': 'Thêm học sinh thành công!'}
     except Exception as e:
         db.session.rollback()
-        return {'success': False, 'message': 'Lỗi: Tuổi học sinh sai quy định,...'}
+        return {'success': False, 'message': 'Lỗi: Tuổi học sinh sai quy định, số đt không được giống nhau'}
 
 
 def delete_student(student_id):
@@ -75,7 +75,37 @@ def delete_student(student_id):
         return {'success': True, 'message': 'Xóa học sinh thành công!'}
     except Exception as e:
         db.session.rollback()
-        return {'success': False, 'message': 'Lỗi'}
+        return {'success': False, 'message': 'Lỗi khi xoá học sinh'}
+
+def change_student_class(student_id, new_class_id):
+    try:
+        # Tìm học sinh theo ID
+        student = Student.query.get(student_id)
+
+        # Cập nhật class_id
+        student.class_id = new_class_id
+        db.session.commit()
+        return {'success': True, 'message': 'Chuyển lớp chưa xác định thành công.'}
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': 'Không thể chuyển sang lớp chưa xác định'}
+
+def add_student_to_class(student_id, class_id):
+    try:
+        # Tìm học sinh theo ID
+        student = Student.query.get(student_id)
+        if not student:
+            return {'success': False, 'message': 'Học sinh không tồn tại.'}
+
+        # Cập nhật class_id của học sinh
+        student.class_id = class_id
+        db.session.commit()
+        return {'success': True, 'message': 'Thêm học sinh vào lớp thành công.'}
+    except Exception as e:
+        db.session.rollback()
+        return {'success': False, 'message': str(e)}
+
+
 
 # Lay ra nhung hoc sinh hoc mon hoc
 def get_all_students_average_score(subject_id):

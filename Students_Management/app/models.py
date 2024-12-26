@@ -77,7 +77,7 @@ class Admin(User):
 class Student(User):
     id = db.Column(db.Integer, db.ForeignKey('user.id'), primary_key=True, autoincrement=True)  # Tham chiếu đến User
     # num_instances = 0
-    class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False, default=1)
+    class_id = db.Column(db.Integer, db.ForeignKey('class.id'), nullable=False, default=2)
     regulation_age_id = db.Column(db.Integer, db.ForeignKey('regulation_age.id'), nullable=False, default=2)
     scores = db.relationship('Score', backref='student', lazy=True)
 
@@ -194,8 +194,8 @@ class ScoreType(db.Model):
 class Score(db.Model):
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     so_diem = db.Column(db.Float, nullable=False)
-    student_id = db.Column(db.Integer, ForeignKey('student.id'), nullable=False)
-    subject_id = db.Column(db.Integer, ForeignKey('subject.id'), nullable=False)
+    student_id = db.Column(db.Integer, ForeignKey('student.id'), nullable=True)
+    subject_id = db.Column(db.Integer, ForeignKey('subject.id'), nullable=True)
     score_type_id = Column(db.Integer, db.ForeignKey('score_type.id'), nullable=False)
 
     def __str__(self):
@@ -313,13 +313,23 @@ if __name__ == '__main__':
         db.session.add(classgrade2)
         db.session.add(classgrade3)
 
-        quydinh1 = RegulationAge (name='Độ tuổi')
-        quydinh2 = RegulationMaxStudent(name='Sĩ số')
+        quydinh1 = RegulationMaxStudent(name='Sĩ số tối đa', max_students=1000)
+        quydinh2 = RegulationAge (name='Độ tuổi 15-20')
+        quydinh3 = RegulationMaxStudent(name='Sĩ số tối đa')
+        db.session.add(quydinh1)
+        db.session.add(quydinh2)
+        db.session.add(quydinh3)
 
-        phonghoc1 = ClassRoom(name='D101')
+        phonghoc1 = ClassRoom(name='Phòng chưa xác định')
+        phonghoc2 = ClassRoom(name='D01')
+        db.session.add(phonghoc1)
+        db.session.add(phonghoc2)
 
-        class1 = Class(name='10A1', class_grade=classgrade1, regulation_max_student=quydinh2, class_room=phonghoc1)
+        class1 = Class(name='Lớp chưa xác định', class_grade=classgrade1, regulation_max_student=quydinh1, class_room=phonghoc1)
+        class2 = Class(name='10A1', class_grade=classgrade1, regulation_max_student=quydinh3, class_room=phonghoc2)
         db.session.add(class1)
+        db.session.add(class2)
+
 
         # Tạo một đối tượng Student
         student1 = Student(
@@ -333,8 +343,8 @@ if __name__ == '__main__':
             phone="0908123452",
             email="lan@example.com",
             avatar="https://res.cloudinary.com/dnwyvuqej/image/upload/v1733499646/default_avatar_uv0h7z.jpg",
-            class_ = class1,  # Tham chiếu đến lớp
-            regulation_age = quydinh1,
+            class_ = class2,  # Tham chiếu đến lớp
+            regulation_age = quydinh2,
         )
         db.session.add(student1)
 

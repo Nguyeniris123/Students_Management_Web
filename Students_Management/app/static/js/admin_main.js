@@ -65,6 +65,65 @@ function deleteStudent(studentId) {
     }
 }
 
+function updateStudentClass(studentId) {
+    if (confirm('Bạn có chắc muốn chuyển học sinh này sang lớp chưa xác định?')) {
+        fetch(`/admin/studentview/update_student_class`, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+                student_id: studentId,
+                new_class_id: 1, // Giá trị class_id mới là 1 (Lớp chưa xác định)
+            }),
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(data.message);
+                // Cập nhật danh sách học sinh sau khi thay đổi
+                location.reload();
+            } else {
+                alert(`Lỗi: ${data.message}`);
+            }
+        })
+        .catch(error => {
+            console.error('Error:', error);
+            alert('Có lỗi xảy ra khi chuyển lớp.');
+        });
+    }
+}
+
+function addStudentToClass() {
+    const classId = document.getElementById("class").value;
+    const studentId = document.getElementById("studentSelect").value;
+
+    // Gửi yêu cầu AJAX để thêm học sinh vào lớp
+    fetch(`/admin/studentview/add_student_to_class`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            student_id: studentId,
+            class_id: classId
+        }),
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            alert(data.message);
+            location.reload();  // Làm mới trang để cập nhật danh sách
+        } else {
+            alert(data.message);
+        }
+    })
+    .catch(error => {
+        alert('Có lỗi xảy ra khi thêm học sinh vào lớp.');
+    });
+}
+
+
 function addScore(studentId, scoreType) {
     const scoreValue = prompt("Nhập điểm cần thêm:");
 
