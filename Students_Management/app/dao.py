@@ -1,7 +1,8 @@
 from datetime import datetime
-from sqlalchemy import func
+from sqlalchemy import func, case
 from sqlalchemy.exc import SQLAlchemyError
-from app.models import User, Score, ScoreType, Student, Gender, Regulation, Year, Semester, Subject, RegulationAge, RegulationMaxStudent
+from app.models import User, Score, ScoreType, Student, Gender, Regulation, Year, Semester, Subject, RegulationAge, \
+    RegulationMaxStudent, Class
 from app import app, db
 import hashlib
 import cloudinary.uploader
@@ -259,6 +260,18 @@ def get_classgrade_id(student_id:None):
         if student:
             return student.class_.class_grade.id
 
+def get_all_students_average_score2(subject_id):
+    return db.session.query(Score.student_id,Score.subject_id,(func.sum(Score.so_diem * ScoreType.he_so)/func.sum(ScoreType.he_so)).label('avg_score'))\
+        .filter(Score.subject_id.__eq__(subject_id)).join(ScoreType,ScoreType.id.__eq__(Score.score_type_id)).group_by(Score.student_id)
+    # Chưa trả về dạng danh sách cần .all() nữa
+
+# Điểm trung bình của các lớp trong môn học
+def class_avg_score(subject_id):
+    sub_query = get_all_students_average_score2(subject_id=subject_id).subquery()
+    avg_score_of_classes = db.session.query(Class.name,func.count(sub_query.c.student_id).label('Si_So'),func.count(case((sub_query.c.avg_score >= 5.0 , 1))).label('SL_Dat'))\
+                                     .join(Student,sub_query.c.student_id.__eq__(Student.id)).join(Class,Class.id.__eq__(Student.class_id)).group_by(Student.class_id)
+    return avg_score_of_classes.all()
+
 def get_average_score(subject_id=None, student_id=None):
     if student_id and subject_id:
         query = db.session.query(
@@ -275,3 +288,27 @@ def get_average_score(subject_id=None, student_id=None):
         )
         # Thực hiện nhóm dữ liệu và trả về kết quả
         return query.group_by(Score.subject_id).scalar()
+
+# Lay ra nhung mon hoc co trong hoc ki va nam hoc
+def find_subject(semester, year):
+    subject = db.session.query(Subject.id,Semester.name,Year.name).join(Semester, Semester.id.__eq__(Subject.semester_id)).join(Year, Year.id.__eq__(Semester.year_id)).filter(Semester.name.__eq__(semester) and Year.name.__eq__(year)).all()
+    return subject
+
+# EX find_subject()
+
+# Lay ra diem trung binh cua hoc sinh hoc mon hoc
+
+def load_subject_by_semesterID(semester_id):
+    subjects = db.session.query(Subject.id, Subject.name).filter(Subject.semester_id.__eq__(semester_id)).all()
+    return subjects
+
+def load_all_semester():
+    semester = db.session.query(Semester.id,Semester.name, Year.name).join(Year, Year.id.__eq__(Semester.year_id)).all()
+    return semester
+
+def load_semester_year_by_id(semester_id):
+    semster_year = db.session.get(Semester,semester_id)
+    return semster_year
+
+def get_subject_by_id(subject_id):
+    return db.session.get(Subject,subject_id)

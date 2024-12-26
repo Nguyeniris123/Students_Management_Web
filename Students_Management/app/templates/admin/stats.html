@@ -1,38 +1,107 @@
 {% extends 'admin/master.html' %}
-
 {% block body %}
 <h1 class="text-center text-danger mt-1">THỐNG KÊ - BÁO CÁO</h1>
 
-<div class="row">
-    <div class="col-md-7 col-12"></div>
-    <div class="col-md-5 col-12">
-        <canvas id="myChart"></canvas>
+<div class="mb-4 mt-3">
+    <form method="get" action="{{url_for('statsview.index')}}">
+        <div class="row m-0">
+            <div class="col-12 col-md-4 p-0">
+                <select class="form-control" id="semester_id" name="semester" onchange="load_subject_data()">
+                    {% for s in semester_fe %}
+                    <option value="{{s[0]}}" {% if s[0]== selected_semester|int %} selected {% endif %}>
+                        {{s[1]}}&nbsp;-&nbsp;Năm học&nbsp;{{s[2]}}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="col-12 col-md-5 pl-2">
+                <select class="form-control" id="subject_id" name="subject" onchange="send_request_stats()">
+                    {% for s in subjects_fe %}
+                    <option value="{{s[0]}}" {% if s[0]== selected_subject|int %} selected {% endif %}>
+                        {{s[1]}}
+                    </option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
+    </form>
+</div>
+
+<div class="text-center border p-2">BÁO CÁO TỔNG KẾT MÔN HỌC</div>
+<div class="row m-0 border-bottom">
+    <div class="col-md-6 col-xs-12 border-left p-2" id="subject_name_id">Môn: {{subject_name}}</div>
+    <div class="col-md-6 col-xs-12 border-left border-right p-2" id="semester_year_id">Thời gian: {{semester_year}}
+    </div>
+</div>
+<div class="row m-0 border-bottom">
+    <div class="col-md-1 col-1 text-center p-2 border-left">STT</div>
+    <div class="col-md-5 col-5 text-center p-2 border-left">Lớp</div>
+    <div class="col-md-2 col-2 text-center p-2 border-left">Sĩ số</div>
+    <div class="col-md-2 col-2 text-center p-2 border-left">Số lượng đạt</div>
+    <div class="col-md-2 col-2 text-center p-2 border-left border-right">Tỷ lệ(%)</div>
+</div>
+<div class="table_avg_score_data" id="table_data_id">
+    {% set i = 0 %}
+    {%for class in classes_avg_score%}
+    {%set i = i + 1%}
+    <div class="row m-0 border-bottom">
+        <div class="col-md-1 col-1 text-center p-2 border-left">{{i}}</div>
+        <div class="col-md-5 col-5 text-center p-2 border-left">{{class[0]}}</div>
+        <div class="col-md-2 col-2 text-center p-2 border-left">{{class[1]}}</div>
+        <div class="col-md-2 col-2 text-center p-2 border-left">{{class[2]}}</div>
+        <div class="col-md-2 col-2 text-center p-2 border-left border-right">{{((class[2]/class[1]) * 100)| round(2)}}
+        </div>
+    </div>
+    {%endfor%}
+</div>
+
+<div class="mb-4 mt-5">
+    <h1 class="text-center text-primary mt-1">BIỂU ĐỒ THỐNG KÊ</h1>
+    <div id="chart_container">
+        <canvas id="statsChart"></canvas>
     </div>
 </div>
 
+{% block scripts %}
+<script src="{{ url_for('static', filename='js/stats.js') }}"></script>
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <script>
-    window.onload = function() {
-         const ctx = document.getElementById('myChart');
+    let  labels = [] , data = []
+    let background_colors = []
+        const ctx = document.getElementById('statsChart').getContext('2d');
 
-          new Chart(ctx, {
-            type: 'bar',
-            data: {
-              labels: ['Red', 'Blue', 'Yellow', 'Green', 'Purple', 'Orange'],
-              datasets: [{
-                label: '# of Votes',
-                data: [12, 19, 3, 5, 2, 3],
-                borderWidth: 1
-              }]
-            },
-            options: {
-              scales: {
-                y: {
-                  beginAtZero: true
-                }
-              }
-            }
-          });
+        {% for class in classes_avg_score%}
+            labels.push('{{class[0]}}')
+            data.push({{class[2]}})
+            const r = Math.floor(Math.random() * 256);  // Red component (0-255)
+            const g = Math.floor(Math.random() * 256);  // Green component (0-255)
+            const b = Math.floor(Math.random() * 256);  // Blue component (0-255)
+            const a = (Math.random() * 0.5 + 0.3).toFixed(2); // Alpha (opacity) between 0.3 and 0.8
+            background_colors.push(`rgba(${r}, ${g}, ${b}, ${a})`)
+        {%endfor%}
+
+
+ new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: labels,
+      datasets: [{
+        label: 'Số lượng học sinh đạt - không đạt',
+        data: data,
+        backgroundColor: background_colors,
+        borderWidth: 1,
+        barThickness: 30
+      }]
+    },
+    options: {
+      scales: {
+        y: {
+          beginAtZero: true
+        }
+      }
     }
+  });
 </script>
+{%endblock%}
+
 {% endblock %}

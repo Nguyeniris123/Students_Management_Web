@@ -8,7 +8,8 @@ from app.models import (Class, Student, User, UserRole, Semester, Subject,
                         Gender, ClassRoom)
 from app.dao import get_students_by_class, get_scores_by_subject, add_score, edit_score, delete_score, \
     get_all_students_average_score, get_students_by_kw, add_student, delete_student, change_student_class, \
-    add_student_to_class
+    add_student_to_class, load_all_semester, load_subject_by_semesterID, load_semester_year_by_id, \
+    get_subject_by_id, class_avg_score
 from flask_admin import Admin, BaseView, expose, AdminIndexView
 from app import app, db
 from flask_admin.contrib.sqla import ModelView
@@ -376,6 +377,49 @@ class ScoreView(AuthenticatedTeacherView):
         response.headers['Content-Type'] = 'application/pdf'
         return response
 
+
+class StatsView(AuthenticatedAdminView):
+    @expose('/')
+    def index(self):
+        semester_fe = load_all_semester()
+        semester_id = semester_fe[0][0]
+        semester_year = load_semester_year_by_id(semester_id)
+        semester_year = semester_year.__str__()
+        subjects_fe = load_subject_by_semesterID(semester_fe[0][0])
+        subject_id = subjects_fe[0][0]
+        subject_name = get_subject_by_id(subject_id).name
+        # Lay DTB
+        classes_avg_score = class_avg_score(subject_id=subject_id)
+
+        return self.render('admin/stats.html',semester_fe=semester_fe,subjects_fe=subjects_fe,semester_year=semester_year
+                           ,selected_semester=semester_id, selected_subject=subject_id
+                           , subject_name=subject_name, classes_avg_score=classes_avg_score)
+
+    @expose('api/load_subject_data', methods=['get','post'])
+    def load_subject_data(self):
+        semester_id = request.json.get('semester_id')
+        subjects_data = load_subject_by_semesterID(semester_id=semester_id)
+        subjects_data = [tuple(row) for row in subjects_data]
+        return jsonify(subjects_data)
+
+    @expose('api/reload_table', methods=['post'])
+    def reload_table(self):
+        subject_id = request.json.get('subject_id')
+        subject = get_subject_by_id(subject_id)
+        subject_name = subject.name
+        # Lay ma hoc ky
+        semester_id = request.json.get('semester_id')
+        semester = load_semester_year_by_id(semester_id)
+        semester_year = semester.__str__()
+            # Lay DTB
+        classes_avg_score = class_avg_score(subject_id=subject_id)
+        classes_avg_score = [tuple(row) for row in classes_avg_score]
+        new_table = {
+            'subject_name':subject_name,
+            'semester_year':semester_year,
+            'class_avg_score': classes_avg_score
+        }
+        return jsonify(new_table)
 
 # Thêm các bảng vào Flask-Admin
 # admin.add_view(StudentView(Student, db.session))
