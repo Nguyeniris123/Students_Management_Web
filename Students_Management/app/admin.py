@@ -1,7 +1,7 @@
 from datetime import datetime
 from io import BytesIO
 from reportlab.lib.pagesizes import letter
-from sqlalchemy import Date
+from sqlalchemy import Date, func
 
 from app.models import (Class, Student, User, UserRole, Semester, Subject,
                         Score, ScoreType, ClassGrade, Year, RegulationMaxStudent, RegulationAge, Schedule, LoaiDiem,
@@ -252,6 +252,15 @@ class StudentClassView(AuthenticatedStaffView):
             hocsinh=hocsinh,
             keyword=keyword
         )
+
+    @expose('/student_count/<int:class_id>', methods=['GET'])
+    def student_count(self, class_id):
+        try:
+            # Truy vấn số lượng học sinh thuộc lớp
+            count = db.session.query(func.count(Student.id)).filter(Student.class_id == class_id).scalar()
+            return jsonify({'success': True, 'count': count})
+        except Exception as e:
+            return jsonify({'success': False, 'message': 'Không lấy được sĩ số'})
 
 
 

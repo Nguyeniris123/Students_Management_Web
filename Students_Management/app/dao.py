@@ -2,7 +2,7 @@ from datetime import datetime
 from sqlalchemy import func, case
 from sqlalchemy.exc import SQLAlchemyError
 from app.models import User, Score, ScoreType, Student, Gender, Regulation, Year, Semester, Subject, RegulationAge, \
-    RegulationMaxStudent, Class
+    RegulationMaxStudent, Class, ClassGrade, KhoiLop
 from app import app, db
 import hashlib
 import cloudinary.uploader
@@ -25,6 +25,30 @@ def get_students_by_kw(keyword=None):
         return Student.query.filter(Student.name.ilike(f"%{keyword}%")).all()
     return Student.query.order_by(Student.name).all()
 
+def assign_student_to_class_10():
+    # Tìm ClassGrade có tên là Khối 10
+    grade_10 = ClassGrade.query.filter_by(name=KhoiLop.Khoi10).first()
+    if not grade_10:
+        return None  # Không có khối 10 nào
+
+    # Lấy danh sách các lớp thuộc khối 10
+    classes = (
+        Class.query
+        .filter_by(class_grade_id=grade_10.id)  # Chỉ lấy lớp thuộc khối 10
+        .order_by(Class.id)  # Sắp xếp theo id tăng dần
+        .all()
+    )
+
+    for cls in classes:
+        # Đếm số lượng học sinh hiện tại trong lớp
+        current_students = Student.query.filter_by(class_id=cls.id).count()
+
+        # Kiểm tra nếu lớp còn chỗ
+        if current_students < cls.max_students:
+            return cls  # Trả về lớp đầu tiên còn chỗ
+
+    return None  # Không có lớp nào còn chỗ
+
 def add_student(data):
     try:
         # Lấy thông tin từ form
@@ -42,6 +66,11 @@ def add_student(data):
         # Chuyển đổi ngày sinh từ chuỗi sang kiểu Date
         birth_date = datetime.strptime(birth, '%Y-%m-%d').date() if birth else None
 
+        # Tìm lớp khối 10 phù hợp
+        assigned_class = assign_student_to_class_10()
+        if not assigned_class:
+            return {'success': False, 'message': 'Không còn lớp khối 10 nào còn chỗ.'}
+
         # Tạo đối tượng học sinh mới
         new_student = Student(
             username=phone,  # Đặt username là số điện thoại
@@ -50,14 +79,15 @@ def add_student(data):
             birth=birth_date,
             email=email,
             phone=phone,
-            address=address
+            address=address,
+            class_id=assigned_class.id  # Gán vào lớp phù hợp
         )
 
         # Thêm học sinh vào cơ sở dữ liệu
         db.session.add(new_student)
         db.session.commit()
 
-        return {'success': True, 'message': 'Thêm học sinh thành công!'}
+        return {'success': True, 'message': f'Học sinh được thêm vào lớp {assigned_class.name}.'}
     except Exception as e:
         db.session.rollback()
         return {'success': False, 'message': 'Lỗi: Tuổi học sinh sai quy định, số đt không được giống nhau'}

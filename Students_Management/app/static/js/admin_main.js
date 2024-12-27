@@ -123,6 +123,30 @@ function addStudentToClass() {
     });
 }
 
+function updateStudentCount(classId) {
+    // Gửi yêu cầu đến server để lấy sĩ số
+    fetch(`/admin/studentclassview/student_count/${classId}`)
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                document.getElementById('student-count').value = data.count;
+            } else {
+                alert("Lỗi: " + data.message);
+            }
+        })
+        .catch(error => {
+            console.error("Có lỗi xảy ra:", error);
+        });
+}
+
+// Khi tải trang, lấy sĩ số cho lớp được chọn sẵn
+document.addEventListener("DOMContentLoaded", function () {
+    const classId = document.getElementById('class').value;
+    if (classId) {
+        updateStudentCount(classId);
+    }
+});
+
 
 function addScore(studentId, scoreType) {
     const scoreValue = prompt("Nhập điểm cần thêm:");

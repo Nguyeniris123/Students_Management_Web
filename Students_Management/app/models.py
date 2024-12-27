@@ -110,6 +110,11 @@ class Class(db.Model):
     class_room_id = db.Column(db.Integer, db.ForeignKey('class_room.id'), nullable=False)
     regulation_max_student_id = db.Column(db.Integer, db.ForeignKey('regulation_max_student.id'), nullable=False, default=1)
 
+    @property
+    def max_students(self):
+        # Trả về số lượng học sinh tối đa từ RegulationMaxStudent
+        return self.regulation_max_student.max_students if self.regulation_max_student else 40
+
     __table_args__ = (
         db.UniqueConstraint('name', 'class_grade_id', name='unique_name_class_grade'),
     )
@@ -123,7 +128,7 @@ class ClassGrade(db.Model):
     id = Column(Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.Enum(KhoiLop), default=KhoiLop.Khoi10)
     year_id = Column(db.Integer, db.ForeignKey('year.id'), nullable=False)
-    classes = relationship('Class', backref='class_grade', lazy=True)
+    classes = relationship('Class', backref='class_grade', lazy=True, cascade="all, delete-orphan")
     subjects = relationship('Subject', backref='class_grade', lazy=True)
     __table_args__ = (
         db.UniqueConstraint('year_id', 'name', name='unique_year_class_grade'),
@@ -325,7 +330,7 @@ if __name__ == '__main__':
         db.session.add(phonghoc1)
         db.session.add(phonghoc2)
 
-        class1 = Class(name='Lớp chưa xác định', class_grade=classgrade1, regulation_max_student=quydinh1, class_room=phonghoc1)
+        class1 = Class(name='Lớp chưa xác định', class_grade=classgrade3, regulation_max_student=quydinh1, class_room=phonghoc1)
         class2 = Class(name='10A1', class_grade=classgrade1, regulation_max_student=quydinh3, class_room=phonghoc2)
         db.session.add(class1)
         db.session.add(class2)

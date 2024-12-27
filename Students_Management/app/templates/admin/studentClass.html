@@ -11,16 +11,19 @@
         <!-- Dropdown chọn lớp -->
         <div class="col-md-6 col-12">
             <label for="class">Lớp</label>
-            <select class="form-control" id="class" name="class">
+            <select class="form-control" id="class" name="class" onchange="updateStudentCount(this.value)">
                 {% for cls in classes %}
-                <option value="{{ cls.id }}" {% if cls.id== request.args.get('class')|int %} selected {% endif %}>
-                {{ cls }}
+                <option value="{{ cls.id }}" {% if cls.id == request.args.get('class')|int %} selected {% endif %}>
+                    {{ cls }}
                 </option>
                 {% endfor %}
             </select>
         </div>
+
+        <!-- Hiển thị sĩ số -->
         <div class="col-md-6 col-12">
             <label>Sĩ số</label>
+            <input type="text" id="student-count" class="form-control" value="0" readonly>
         </div>
         <div class="col-md-6 col-12 d-flex">
             <form method="get" action="/" class="row d-flex w-100">
