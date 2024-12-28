@@ -9,4 +9,7 @@ Team Size: 3
 2251052104 - Bùi Nguyễn Như Quyền
 Tên database: studentdb
 Tài khoản admin: admin - 1
+<<<<<<< HEAD
 Tài khoản học sinh: student1 - 1
+=======
+>>>>>>> 1f510b30a7333d31a5d8af2100b7fb8769d79af6
