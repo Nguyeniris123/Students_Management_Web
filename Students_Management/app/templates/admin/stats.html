@@ -8,7 +8,7 @@
             <div class="col-12 col-md-4 p-0">
                 <select class="form-control" id="semester_id" name="semester" onchange="load_subject_data()">
                     {% for s in semester_fe %}
-                    <option value="{{s[0]}}" {% if s[0]== selected_semester|int %} selected {% endif %}>
+                    <option value="{{s[0]}}" >
                         {{s[1]}}&nbsp;-&nbsp;Năm học&nbsp;{{s[2]}}
                     </option>
                     {% endfor %}
@@ -17,7 +17,7 @@
             <div class="col-12 col-md-5 pl-2">
                 <select class="form-control" id="subject_id" name="subject" onchange="send_request_stats()">
                     {% for s in subjects_fe %}
-                    <option value="{{s[0]}}" {% if s[0]== selected_subject|int %} selected {% endif %}>
+                    <option value="{{s[0]}}" >
                         {{s[1]}}
                     </option>
                     {% endfor %}
@@ -69,14 +69,15 @@
     let  labels = [] , data = []
     let background_colors = []
         const ctx = document.getElementById('statsChart').getContext('2d');
-
+        let r,g,b
+         const a = (Math.random() * 0.5 + 0.3).toFixed(2); // Alpha (opacity) between 0.3 and 0.8
         {% for class in classes_avg_score%}
             labels.push('{{class[0]}}')
             data.push({{class[2]}})
-            const r = Math.floor(Math.random() * 256);  // Red component (0-255)
-            const g = Math.floor(Math.random() * 256);  // Green component (0-255)
-            const b = Math.floor(Math.random() * 256);  // Blue component (0-255)
-            const a = (Math.random() * 0.5 + 0.3).toFixed(2); // Alpha (opacity) between 0.3 and 0.8
+             r = Math.floor(Math.random() * 256);  // Red component (0-255)
+             g = Math.floor(Math.random() * 256);  // Green component (0-255)
+             b = Math.floor(Math.random() * 256);  // Blue component (0-255)
+
             background_colors.push(`rgba(${r}, ${g}, ${b}, ${a})`)
         {%endfor%}
 
@@ -86,7 +87,7 @@
     data: {
       labels: labels,
       datasets: [{
-        label: 'Số lượng học sinh đạt - không đạt',
+        label: 'Số lượng học sinh đạt',
         data: data,
         backgroundColor: background_colors,
         borderWidth: 1,

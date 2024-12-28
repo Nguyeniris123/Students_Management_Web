@@ -12,7 +12,7 @@ function create_chart(labels, data, background_colors) {
     data: {
       labels: labels,
       datasets: [{
-        label: 'Thống kê điểm trung bình các lớp',
+        label: 'Số lượng học sinh đạt',
         data: data,
         backgroundColor: background_colors,
         borderWidth: 1,
@@ -50,9 +50,9 @@ function send_request_stats() {
         let labels = []
         let data = []
         let background_colors = []
-        const r = Math.floor(Math.random() * 256);  // Red component (0-255)
-        const g = Math.floor(Math.random() * 256);  // Green component (0-255)
-        const b = Math.floor(Math.random() * 256);  // Blue component (0-255)
+        let r = Math.floor(Math.random() * 256);  // Red component (0-255)
+        let g = Math.floor(Math.random() * 256);  // Green component (0-255)
+        let b = Math.floor(Math.random() * 256);  // Blue component (0-255)
         const a = (Math.random() * 0.5 + 0.3).toFixed(2); // Alpha (opacity) between 0.3 and 0.8
         div_subject_name = document.getElementById('subject_name_id')
         div_semester_year = document.getElementById('semester_year_id')
@@ -91,6 +91,9 @@ function send_request_stats() {
 
             row.append(stt,lop,ss,sld,tyLe)
             div_table_data.appendChild(row)
+            r = Math.floor(Math.random() * 256);
+            g = Math.floor(Math.random() * 256);
+            b = Math.floor(Math.random() * 256);
             background_colors.push(`rgba(${r}, ${g}, ${b}, ${a})`)
         }
           create_chart(labels,data,background_colors)
@@ -113,7 +116,6 @@ function load_subject_data() {
     }).then(function(res) {
         return res.json()
     }).then(function(data_subjects) {
-//     CHO NAY CÂN NGHIÊN CỨU LẠI
        selectSubject = document.getElementById('subject_id');
        selectSubject.innerHTML = "";
 
